@@ -10,7 +10,7 @@ from fastapi import HTTPException, status
 from app.models import User
 from app.repositories.user_repository import UserRepository
 from app.schemas import UserRegisterRequest, UserResponse
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 import sys
 from pathlib import Path
 
@@ -109,6 +109,29 @@ class UserService:
             User object or None if not found
         """
         return self.user_repository.get_by_email(email)
+    
+    def authenticate_user(self, email: str, password: str) -> Optional[User]:
+        """
+        Authenticate a user by email and password
+        
+        Args:
+            email: User email address
+            password: Plain text password
+            
+        Returns:
+            User object if credentials are valid, None otherwise
+        """
+        user = self.get_user_by_email(email)
+        if not user:
+            logger.warning(f"Login attempt with non-existent email: {email}")
+            return None
+        
+        if not verify_password(password, user.password_hash):
+            logger.warning(f"Invalid password attempt for user: {email}")
+            return None
+        
+        logger.info(f"User authenticated successfully: {email} (ID: {user.id})")
+        return user
     
     def user_to_response(self, user: User) -> UserResponse:
         """

@@ -65,3 +65,126 @@ class ErrorResponse(BaseModel):
     error_code: Optional[str] = Field(None, description="Error code")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="Error timestamp")
     details: Optional[dict] = Field(None, description="Additional error details")
+
+
+class LoginRequest(BaseModel):
+    """User login request schema"""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "email": "user@example.com",
+                "password": "SecurePassword123!",
+            }
+        }
+    )
+    
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., description="User password", min_length=1)
+
+
+class TokenResponse(BaseModel):
+    """Token response schema"""
+    access_token: str = Field(..., description="JWT access token (15 minutes expiry)")
+    refresh_token: str = Field(..., description="JWT refresh token (7 days expiry)")
+    token_type: str = Field(default="bearer", description="Token type")
+
+
+class LoginResponse(BaseModel):
+    """Login response schema"""
+    message: str = Field(..., description="Success message")
+    user: UserResponse = Field(..., description="User information")
+    tokens: TokenResponse = Field(..., description="Access and refresh tokens")
+
+
+class RefreshTokenRequest(BaseModel):
+    """Refresh token request schema"""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            }
+        }
+    )
+    
+    refresh_token: str = Field(..., description="JWT refresh token")
+
+
+class RefreshTokenResponse(BaseModel):
+    """Refresh token response schema"""
+    access_token: str = Field(..., description="New JWT access token (15 minutes expiry)")
+    refresh_token: str = Field(..., description="JWT refresh token (same or new)")
+    token_type: str = Field(default="bearer", description="Token type")
+
+
+class LogoutRequest(BaseModel):
+    """Logout request schema"""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            }
+        }
+    )
+    
+    refresh_token: str = Field(..., description="JWT refresh token to invalidate")
+
+
+class LogoutResponse(BaseModel):
+    """Logout response schema"""
+    message: str = Field(..., description="Success message")
+
+
+# Role schemas
+class RoleCreateRequest(BaseModel):
+    """Role creation request schema"""
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Manager",
+                "description": "Manager role with elevated permissions",
+            }
+        }
+    )
+    
+    name: str = Field(..., description="Role name", min_length=1, max_length=50)
+    description: Optional[str] = Field(None, description="Role description")
+
+
+class RoleResponse(BaseModel):
+    """Role response schema"""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int = Field(..., description="Role unique identifier")
+    name: str = Field(..., description="Role name")
+    description: Optional[str] = Field(None, description="Role description")
+    created_at: datetime = Field(..., description="Role creation timestamp")
+
+
+class RoleCreateResponse(BaseModel):
+    """Role creation response schema"""
+    message: str = Field(..., description="Success message")
+    role: RoleResponse = Field(..., description="Created role information")
+
+
+class RolesListResponse(BaseModel):
+    """Roles list response schema"""
+    roles: list[RoleResponse] = Field(..., description="List of roles")
+    total: int = Field(..., description="Total number of roles")
+
+
+class AssignRoleRequest(BaseModel):
+    """Assign role to user request schema"""
+    role_id: int = Field(..., description="Role ID to assign")
+
+
+class AssignRoleResponse(BaseModel):
+    """Assign role response schema"""
+    message: str = Field(..., description="Success message")
+    user: UserResponse = Field(..., description="User with updated roles")
+    role: RoleResponse = Field(..., description="Assigned role")
+
+
+class RemoveRoleResponse(BaseModel):
+    """Remove role response schema"""
+    message: str = Field(..., description="Success message")
+    user: UserResponse = Field(..., description="User with updated roles")
