@@ -1,6 +1,3 @@
-"""
-Password hashing and security utilities
-"""
 import bcrypt
 import jwt
 import os

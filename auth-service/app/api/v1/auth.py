@@ -83,7 +83,8 @@ def login(
         # Generate JWT tokens
         token_data = {
             "sub": str(user.id),
-            "email": user.email
+            "email": user.email,
+            "roles": [role.name for role in user.roles]
         }
         
         access_token = create_access_token(token_data)

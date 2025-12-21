@@ -59,7 +59,7 @@ class RefreshToken(Base):
     """Refresh token model"""
     __tablename__ = "refresh_tokens"
     
-    token = Column(String(255), primary_key=True)
+    token = Column(Text, primary_key=True)
     user_id = Column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -1,6 +1,3 @@
-"""
-RabbitMQ publisher and consumer base classes
-"""
 import json
 import logging
 from typing import Callable, Optional, Dict, Any, List

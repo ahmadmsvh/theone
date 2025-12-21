@@ -1,6 +1,3 @@
-"""
-Pydantic models for inter-service communication
-"""
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from enum import Enum

@@ -1,6 +1,3 @@
-"""
-Database connection utilities for PostgreSQL and MongoDB
-"""
 import logging
 from typing import Optional
 from contextlib import contextmanager

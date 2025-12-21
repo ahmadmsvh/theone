@@ -1,6 +1,3 @@
-"""
-Database connection manager with SQLAlchemy for auth service
-"""
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import QueuePool

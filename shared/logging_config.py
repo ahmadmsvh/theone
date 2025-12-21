@@ -1,6 +1,3 @@
-"""
-Structured JSON logging configuration
-"""
 import logging
 import sys
 import json
@@ -47,15 +44,7 @@ def setup_logging(
     json_output: bool = True,
     log_file: str = None
 ):
-    """
-    Setup structured logging configuration
-    
-    Args:
-        service_name: Name of the service
-        log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        json_output: Whether to use JSON formatting
-        log_file: Optional log file path
-    """
+
     # Remove existing handlers
     root_logger = logging.getLogger()
     root_logger.handlers = []
@@ -114,16 +103,7 @@ class ServiceNameFilter(logging.Filter):
 
 
 def get_logger(name: str, service_name: str = None) -> logging.Logger:
-    """
-    Get a logger instance with service name
-    
-    Args:
-        name: Logger name
-        service_name: Optional service name override
-    
-    Returns:
-        Logger instance
-    """
+
     logger = logging.getLogger(name)
     if service_name:
         for handler in logger.handlers:
