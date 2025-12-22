@@ -1,7 +1,3 @@
-"""
-Integration tests for /auth/refresh endpoint
-"""
-import pytest
 from fastapi import status
 from freezegun import freeze_time
 from datetime import timedelta
@@ -50,7 +46,7 @@ class TestRefreshEndpoint:
     def test_refresh_expired_token(self, client, test_db, sample_user):
         """Test refresh with expired token"""
         from app.core.security import create_refresh_token
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
         from app.repositories.refresh_token_repository import RefreshTokenRepository
         from app.core.security import REFRESH_TOKEN_EXPIRE_DAYS
         
@@ -63,7 +59,7 @@ class TestRefreshEndpoint:
             expired_token = create_refresh_token(token_data)
             
             # Store in database with expired time
-            expires_at = datetime.utcnow() - timedelta(days=1)
+            expires_at = datetime.now(timezone.utc) - timedelta(days=1)
             refresh_token_repo = RefreshTokenRepository(test_db)
             refresh_token_repo.create(
                 token=expired_token,
@@ -148,7 +144,7 @@ class TestRefreshEndpoint:
         """Test refresh when user doesn't exist"""
         from app.core.security import create_refresh_token
         from uuid import uuid4
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
         from app.repositories.refresh_token_repository import RefreshTokenRepository
         from app.core.security import REFRESH_TOKEN_EXPIRE_DAYS
         
@@ -161,7 +157,7 @@ class TestRefreshEndpoint:
         token = create_refresh_token(token_data)
         
         # Store in database
-        expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
         refresh_token_repo = RefreshTokenRepository(test_db)
         refresh_token_repo.create(
             token=token,

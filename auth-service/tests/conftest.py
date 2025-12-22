@@ -1,6 +1,3 @@
-"""
-Pytest configuration and shared fixtures
-"""
 import pytest
 import os
 from typing import Generator
@@ -119,7 +116,8 @@ def access_token(sample_user: User) -> str:
     
     token_data = {
         "sub": str(sample_user.id),
-        "email": sample_user.email
+        "email": sample_user.email,
+        "roles": [role.name for role in sample_user.roles]
     }
     return create_access_token(token_data)
 
@@ -128,17 +126,18 @@ def access_token(sample_user: User) -> str:
 def refresh_token(test_db: Session, sample_user: User) -> str:
     """Create a valid refresh token for testing"""
     from app.core.security import create_refresh_token, REFRESH_TOKEN_EXPIRE_DAYS
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
     from app.repositories.refresh_token_repository import RefreshTokenRepository
     
     token_data = {
         "sub": str(sample_user.id),
-        "email": sample_user.email
+        "email": sample_user.email,
+        "roles": [role.name for role in sample_user.roles]
     }
     token = create_refresh_token(token_data)
     
     # Store in database
-    expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     refresh_token_repo = RefreshTokenRepository(test_db)
     refresh_token_repo.create(
         token=token,

@@ -61,7 +61,7 @@ class TestLogoutEndpoint:
     def test_logout_expired_token(self, client, test_db, sample_user):
         """Test logout with expired token (should still return success)"""
         from app.core.security import create_refresh_token
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
         from app.repositories.refresh_token_repository import RefreshTokenRepository
         from app.core.security import REFRESH_TOKEN_EXPIRE_DAYS
         from freezegun import freeze_time
@@ -75,7 +75,7 @@ class TestLogoutEndpoint:
             expired_token = create_refresh_token(token_data)
             
             # Store in database with expired time
-            expires_at = datetime.utcnow() - timedelta(days=1)
+            expires_at = datetime.now(timezone.utc) - timedelta(days=1)
             refresh_token_repo = RefreshTokenRepository(test_db)
             refresh_token_repo.create(
                 token=expired_token,

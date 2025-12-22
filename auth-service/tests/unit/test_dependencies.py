@@ -1,6 +1,3 @@
-"""
-Unit tests for authentication dependencies
-"""
 import pytest
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials

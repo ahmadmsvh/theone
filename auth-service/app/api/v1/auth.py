@@ -23,6 +23,7 @@ from app.schemas import (
     LogoutResponse
 )
 from app.services.user_service import UserService
+from app.services.session_service import SessionService
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from shared.logging_config import get_logger
 
@@ -101,6 +102,15 @@ def login(
             expires_at=expires_at
         )
         
+        # Cache user data in Redis (with TTL matching refresh token expiry)
+        session_service = SessionService()
+        roles = [role.name for role in user.roles]
+        session_service.cache_user_data(
+            user_id=user.id,
+            email=user.email,
+            roles=roles
+        )
+        
         logger.info(f"User logged in successfully: {user.email} (ID: {user.id})")
         
         return LoginResponse(
@@ -152,6 +162,15 @@ def refresh_token(
                 detail="Invalid token type"
             )
         
+        # Check if token is blacklisted (early check for performance)
+        session_service = SessionService()
+        if session_service.is_blacklisted(refresh_data.refresh_token):
+            logger.warning("Blacklisted refresh token attempted to be used")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has been revoked"
+            )
+        
         # Extract user information from token
         user_id = payload.get("sub")
         user_email = payload.get("email")
@@ -163,8 +182,7 @@ def refresh_token(
                 detail="Invalid token payload"
             )
         
-        # Verify user still exists in database
-        user_service = UserService(db)
+        # Try to get user from cache first, then fallback to database
         try:
             user_uuid = UUID(user_id)
         except ValueError:
@@ -173,13 +191,35 @@ def refresh_token(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token payload"
             )
-        user = user_service.get_user_by_id(user_uuid)
-        if not user:
-            logger.warning(f"User not found for refresh token: {user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found"
+        
+        # Check cache first
+        cached_user_data = session_service.get_user_data(user_uuid)
+        
+        if cached_user_data:
+            # Use cached data
+            user_email = cached_user_data["email"]
+            user_roles = cached_user_data["roles"]
+            logger.debug(f"Using cached user data for refresh token: {user_id}")
+        else:
+            # Fallback to database
+            user_service = UserService(db)
+            user = user_service.get_user_by_id(user_uuid)
+            if not user:
+                logger.warning(f"User not found for refresh token: {user_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found"
+                )
+            user_email = user.email
+            user_roles = [role.name for role in user.roles]
+            
+            # Cache the user data for future requests
+            session_service.cache_user_data(
+                user_id=user.id,
+                email=user.email,
+                roles=user_roles
             )
+            logger.debug(f"Cached user data during refresh token: {user_id}")
         
         # Check if refresh token exists and is valid in database
         refresh_token_repo = RefreshTokenRepository(db)
@@ -199,14 +239,14 @@ def refresh_token(
         
         # Generate new access token
         token_data = {
-            "sub": str(user.id),
-            "email": user.email,
-            "roles": [role.name for role in user.roles]
+            "sub": user_id,
+            "email": user_email,
+            "roles": user_roles
         }
         
         new_access_token = create_access_token(token_data)
         
-        logger.info(f"Token refreshed successfully for user: {user.email} (ID: {user.id})")
+        logger.info(f"Token refreshed successfully for user: {user_email} (ID: {user_id})")
         
         return RefreshTokenResponse(
             access_token=new_access_token,
@@ -262,9 +302,20 @@ def logout(
                 message="Logout successful"
             )
         
+        # Add token to blacklist and invalidate session cache
+        session_service = SessionService()
+        session_service.blacklist_token(logout_data.refresh_token)
+        
         # Revoke refresh token in database
         refresh_token_repo = RefreshTokenRepository(db)
         revoked = refresh_token_repo.revoke(logout_data.refresh_token)
+        
+        # Invalidate user session cache
+        try:
+            user_uuid = UUID(user_id)
+            session_service.invalidate_user_cache(user_uuid)
+        except (ValueError, Exception) as e:
+            logger.warning(f"Failed to invalidate cache during logout for user {user_id}: {e}")
         
         if revoked:
             logger.info(f"User logged out successfully: {user_id}")

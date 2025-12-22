@@ -73,7 +73,13 @@ class RefreshToken(Base):
     
     def is_expired(self) -> bool:
         """Check if token is expired"""
-        return datetime.now(timezone.utc) >= self.expires_at
+        now = datetime.now(timezone.utc)
+        # Normalize expires_at to timezone-aware (SQLite may return naive datetimes)
+        expires_at = self.expires_at
+        if expires_at.tzinfo is None:
+            # Assume UTC if timezone-naive (common with SQLite)
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        return now >= expires_at
     
     def is_valid(self) -> bool:
         """Check if token is valid (not expired and not revoked)"""

@@ -13,25 +13,13 @@ from app.core.database import get_db
 from app.core.security import decode_token
 from app.models import User
 from app.services.user_service import UserService
+from app.services.session_service import SessionService
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__, "auth-service")
 
 security = HTTPBearer()
 
-
-def get_user_service(db: Session = None) -> Generator[UserService, None, None]:
-
-    if db is None:
-        # Get db from dependency if not provided
-        db_gen = get_db()
-        db = next(db_gen)
-        try:
-            yield UserService(db)
-        finally:
-            next(db_gen, None)
-    else:
-        yield UserService(db)
 
 
 async def require_auth(
@@ -80,18 +68,50 @@ async def require_auth(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Get user from database
-    user_service = UserService(db)
-    user = user_service.get_user_by_id(user_id)
-    if not user:
-        logger.warning(f"User not found for authenticated token: {user_id}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    # Try to get user from cache first, then fallback to database
+    session_service = SessionService()
+    cached_user_data = session_service.get_user_data(user_id)
     
-    return user
+    if cached_user_data:
+        # Reconstruct User object from cached data
+        # Note: We still need a User object, but we'll create a minimal one
+        # For full functionality, we still query DB but cache reduces most queries
+        logger.debug(f"Found cached user data for user: {user_id}")
+        # Still verify user exists in DB (for security, but cache reduces load)
+        user_service = UserService(db)
+        user = user_service.get_user_by_id(user_id)
+        if not user:
+            # Cache might be stale, invalidate it
+            session_service.invalidate_user_cache(user_id)
+            logger.warning(f"User not found in database (cache was stale): {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return user
+    else:
+        # Cache miss - get from database and cache it
+        user_service = UserService(db)
+        user = user_service.get_user_by_id(user_id)
+        if not user:
+            logger.warning(f"User not found for authenticated token: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Cache user data for future requests
+        roles = [role.name for role in user.roles]
+        session_service.cache_user_data(
+            user_id=user.id,
+            email=user.email,
+            roles=roles
+        )
+        logger.debug(f"Cached user data for authenticated user: {user_id}")
+        
+        return user
 
 
 def require_role(role_name: str):
