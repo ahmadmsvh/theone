@@ -1,8 +1,8 @@
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi import FastAPI
 from starlette.responses import HTMLResponse
-
 from app.api.v1 import api_router
+
 
 app = FastAPI(
     docs_url=None,

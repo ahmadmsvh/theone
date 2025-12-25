@@ -5,22 +5,22 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from contextlib import contextmanager
 from typing import Generator, Optional
-import sys
 from pathlib import Path
-
-
+import os
 from shared.config import get_settings
-from shared.logging_config import get_logger
+from shared.logging_config import get_logger, setup_logging
 from app.models import Base
 
-logger = get_logger(__name__, "auth-service")
+settings = get_settings()
+setup_logging(service_name=os.getenv("SERVICE_NAME"), log_level=settings.app.log_level)
 
+logger = get_logger(__name__, settings.app.service_name)
+logger.setLevel("DEBUG")
 
 class DatabaseManager:
     """SQLAlchemy database connection manager with connection pooling"""
     
     def __init__(self, database_url: Optional[str] = None):
-
         self.settings = get_settings()
         self.database_url = database_url or self.settings.database.url
         self._engine: Optional[Engine] = None

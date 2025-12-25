@@ -1,9 +1,14 @@
 import logging
 import sys
+import os
 from datetime import datetime
 from typing import Any, Dict
 from pythonjsonlogger import jsonlogger
+from shared.config import get_settings
 
+settings = get_settings()
+
+log_level = settings.app.log_level
 
 class CustomJsonFormatter(jsonlogger.JsonFormatter):
     """Custom JSON formatter with additional fields"""
@@ -38,10 +43,10 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
 
 
 def setup_logging(
-    service_name: str = "unknown",
-    log_level: str = "INFO",
-    json_output: bool = True,
-    log_file: str = None
+    service_name: str = os.getenv("SERVICE_NAME"),
+    log_level: str = log_level,
+    json_output: bool = settings.app.json_output,
+    log_file: str = settings.app.log_file
 ):
 
     # Remove existing handlers
@@ -49,7 +54,7 @@ def setup_logging(
     root_logger.handlers = []
     
     # Set log level
-    level = getattr(logging, log_level.upper(), logging.INFO)
+    level = getattr(logging, log_level.upper(), "DEBUG")
     root_logger.setLevel(level)
     
     # Create formatter
@@ -82,9 +87,9 @@ def setup_logging(
         handler.addFilter(ServiceNameFilter(service_name))
     
     # Configure third-party loggers
-    logging.getLogger("pika").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-    logging.getLogger("psycopg2").setLevel(logging.WARNING)
+    logging.getLogger("pika").setLevel(level)
+    logging.getLogger("urllib3").setLevel(level)
+    logging.getLogger("psycopg2").setLevel(level)
     
     logging.info(f"Logging configured for service: {service_name}", extra={"service_name": service_name})
 
@@ -117,4 +122,3 @@ class RequestContextFilter(logging.Filter):
         # This can be extended to extract request context from thread-local storage
         # For now, it's a placeholder for future enhancement
         return True
-

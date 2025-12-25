@@ -16,7 +16,6 @@ from shared.logging_config import get_logger
 
 logger = get_logger(__name__, "auth-service")
 
-
 class UserService:
     
     def __init__(self, db: Session):

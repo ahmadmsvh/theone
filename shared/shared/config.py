@@ -13,9 +13,9 @@ class DatabaseSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="DATABASE_")
     
     url: str
-    pool_size: int = 5
-    max_overflow: int = 10
-    pool_timeout: int = 30
+    pool_size: int
+    max_overflow: int
+    pool_timeout: int
 
 
 class MongoSettings(BaseSettings):
@@ -31,9 +31,9 @@ class RedisSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="REDIS_")
     
     url: str
-    decode_responses: bool = True
-    socket_timeout: int = 5
-    socket_connect_timeout: int = 5
+    decode_responses: bool
+    socket_timeout: int
+    socket_connect_timeout: int
 
 
 class RabbitMQSettings(BaseSettings):
@@ -41,21 +41,22 @@ class RabbitMQSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="RABBITMQ_")
     
     url: str
-    exchange: str = "theone_exchange"
-    queue_prefix: str = "theone"
-    prefetch_count: int = 10
+    exchange: str
+    queue_prefix: str
+    prefetch_count: int
 
 
 class AppSettings(BaseSettings):
     """Application settings"""
     model_config = SettingsConfigDict(env_prefix="")
     
-    app_name: str = "theone-service"
-    environment: str = "development"
-    debug: bool = False
-    log_level: str = "DEBUG"
-    service_name: str = "unknown"
-
+    app_name: str
+    environment: str
+    debug: bool
+    log_level: str
+    service_name: str 
+    json_output: bool
+    log_file: str
 
 class Settings(BaseSettings):
     """Main settings class combining all configurations"""
@@ -63,7 +64,7 @@ class Settings(BaseSettings):
     _env_file = Path(__file__).parent / ".env"
     load_dotenv(dotenv_path=_env_file)
 
-    model_config = SettingsConfigDict(env_file=str(_env_file), env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict()
     
     database: Optional[DatabaseSettings] = None
     mongodb: Optional[MongoSettings] = None

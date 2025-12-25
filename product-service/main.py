@@ -2,18 +2,18 @@
 from flask import Flask, jsonify
 import sys
 from pathlib import Path
+import os
 
-# Add shared to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "shared"))
-
-from shared.logging_config import setup_logging, get_logger
 from app.core.database import get_db_manager
 from app.api.v1.products import bp as products_bp
 from app.utils import run_async
+from shared.logging_config import setup_logging, get_logger
+from shared.config import get_settings
 
+settings = get_settings()
 # Setup logging
-setup_logging(service_name="product-service", log_level="INFO")
-logger = get_logger(__name__, "product-service")
+setup_logging(service_name=os.getenv("SERVICE_NAME"), log_level=settings.app.log_level)
+logger = get_logger(__name__, os.getenv("SERVICE_NAME"))
 
 # Create Flask app
 app = Flask(__name__)

@@ -100,6 +100,7 @@ services:
     ports:
       - "8001:8001"
     environment:
+      - SERVICE_NAME=auth-service 
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_db
       - REDIS_URL=redis://redis:6379
     depends_on:
@@ -122,6 +123,7 @@ services:
     ports:
       - "5002:5002"
     environment:
+      - SERVICE_NAME=notification-service
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       - REDIS_URL=redis://redis:6379
     depends_on:
@@ -144,6 +146,7 @@ services:
     ports:
       - "5001:5001"
     environment:
+      - SERVICE_NAME=product-service
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_db
       - MONGODB_URL=mongodb://admin:admin@mongodb:27017/theone_db?authSource=admin
       - MONGODB_DATABASE=theone_db
@@ -170,6 +173,7 @@ services:
     ports:
       - "8002:8002"
     environment:
+      - SERVICE_NAME=order-service
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_db
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       - REDIS_URL=redis://redis:6379

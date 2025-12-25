@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
 import sys
+import os
 from pathlib import Path
 
 # Add shared to path
@@ -27,7 +28,8 @@ from app.services.session_service import SessionService
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from shared.logging_config import get_logger
 
-logger = get_logger(__name__, "auth-service")
+logger = get_logger(__name__, os.getenv("SERVICE_NAME"))
+
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 

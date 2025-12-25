@@ -10,7 +10,8 @@ from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from redis import Redis
 from redis.exceptions import ConnectionError as RedisConnectionError
 
-from .config import get_settings
+from shared.config import get_settings
+from shared.logging_config import get_logger
 
 # Optional async imports (Motor)
 try:
@@ -21,7 +22,8 @@ except ImportError:
     AsyncIOMotorClient = None
     AsyncIOMotorDatabase = None
 
-logger = logging.getLogger(__name__)
+settings = get_settings()
+logger = get_logger(__name__, settings.app.service_name)
 
 
 class PostgreSQLConnection:
