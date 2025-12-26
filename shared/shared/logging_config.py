@@ -91,6 +91,14 @@ def setup_logging(
     logging.getLogger("urllib3").setLevel(level)
     logging.getLogger("psycopg2").setLevel(level)
     
+    # Reduce PyMongo logging verbosity (suppress DEBUG heartbeat messages)
+    # Set to WARNING to only show warnings and errors, not routine operations
+    logging.getLogger("pymongo").setLevel(logging.INFO)
+    logging.getLogger("pymongo.topology").setLevel(logging.INFO)
+    logging.getLogger("pymongo.connection").setLevel(logging.INFO)
+    logging.getLogger("pymongo.serverSelection").setLevel(logging.INFO)
+    logging.getLogger("pymongo.command").setLevel(logging.INFO)
+    
     logging.info(f"Logging configured for service: {service_name}", extra={"service_name": service_name})
 
 

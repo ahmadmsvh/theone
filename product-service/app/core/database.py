@@ -2,16 +2,17 @@ import sys
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 
-# Add shared to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "shared"))
 
 from shared.database import get_async_mongo
 from shared.logging_config import get_logger
+from shared.config import get_settings
+
+settings = get_settings()
 
 if TYPE_CHECKING:
     from motor.motor_asyncio import AsyncIOMotorDatabase
 
-logger = get_logger(__name__, "product-service")
+logger = get_logger(__name__, settings.app.service_name)
 
 
 class ProductDatabaseManager:
@@ -54,9 +55,7 @@ class ProductDatabaseManager:
             # Create indexes
             # SKU unique index (sparse to allow nulls)
             await products_collection.create_index("sku", unique=True, sparse=True)
-            # Vendor ID index
             await products_collection.create_index("vendor_id", sparse=True)
-            # Other indexes
             await products_collection.create_index("name")
             await products_collection.create_index("category")
             await products_collection.create_index("status")
@@ -86,6 +85,7 @@ def get_db_manager() -> ProductDatabaseManager:
 async def get_database() -> "AsyncIOMotorDatabase":
     """Get database instance (dependency injection)"""
     db_manager = get_db_manager()
-    if db_manager.mongo._database is None:
+    # Check if database is connected and valid for current event loop
+    if db_manager.mongo._database is None or not db_manager.mongo._is_client_valid_for_current_loop():
         await db_manager.connect()
     return db_manager.database

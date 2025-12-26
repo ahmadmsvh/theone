@@ -8,7 +8,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from shared.logging_config import get_logger
+from shared.config import get_settings
 
+settings = get_settings()
 logger = get_logger(__name__, "auth-service")
 
 # Load .env file from shared directory
@@ -17,10 +19,10 @@ env_path = shared_dir / ".env"
 load_dotenv(dotenv_path=env_path)
 
 # JWT Configuration
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-development")
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
-REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+JWT_SECRET_KEY = settings.app.jwt_secret_key
+JWT_ALGORITHM = settings.app.jwt_algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = int(settings.app.access_token_expire_minutes)
+REFRESH_TOKEN_EXPIRE_DAYS = int(settings.app.refresh_token_expire_days)
 
 
 def hash_password(password: str) -> str:

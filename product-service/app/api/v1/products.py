@@ -1,10 +1,6 @@
 from flask import Blueprint, request, jsonify
 from pydantic import ValidationError
-import sys
-from pathlib import Path
-
-# Add shared to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent / "shared"))
+import os
 
 from shared.logging_config import get_logger
 from app.core.database import get_database
@@ -15,10 +11,14 @@ from app.schemas import (
     ProductCreateRequest,
     ProductUpdateRequest,
     ProductResponse,
-    ProductListResponse
+    ProductListResponse,
+    InventoryAdjustRequest,
+    InventoryResponse,
+    InventoryReserveRequest,
+    InventoryReleaseRequest
 )
 
-logger = get_logger(__name__, "product-service")
+logger = get_logger(__name__, os.getenv("SERVICE_NAME"))
 
 bp = Blueprint("products", __name__, url_prefix="/api/v1/products")
 
@@ -39,17 +39,13 @@ async def create_product(current_user):
         except ValidationError as e:
             return jsonify({"error": "Validation error", "details": e.errors()}), 400
         
-        # Convert to ProductCreate model
-        from app.models import ProductCreate
-        product_create = ProductCreate(**product_data.model_dump())
-        
         # Get user ID and vendor ID from token
         user_id = current_user.get("sub")
         vendor_id = current_user.get("sub")  # Use user_id as vendor_id for now
         
         # Create product
         product = await service.create_product(
-            product_data=product_create,
+            product_data=product_data,
             user_id=user_id,
             vendor_id=vendor_id
         )
@@ -154,10 +150,6 @@ async def update_product(product_id, current_user):
         except ValidationError as e:
             return jsonify({"error": "Validation error", "details": e.errors()}), 400
         
-        # Convert to ProductUpdate model
-        from app.models import ProductUpdate
-        product_update = ProductUpdate(**product_data.model_dump())
-        
         # Get user ID and roles
         user_id = current_user.get("sub")
         user_roles = current_user.get("roles", [])
@@ -166,7 +158,7 @@ async def update_product(product_id, current_user):
         try:
             product = await service.update_product(
                 product_id=product_id,
-                product_data=product_update,
+                product_data=product_data,
                 user_id=user_id,
                 user_roles=user_roles
             )
@@ -207,5 +199,150 @@ async def delete_product(product_id, current_user):
         
     except Exception as e:
         logger.error(f"Error deleting product: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@bp.route("/<product_id>/inventory", methods=["POST"])
+@require_role("Vendor")
+@async_route
+async def adjust_inventory(product_id, current_user):
+    """Adjust product inventory (Vendor only, can only modify their own products)"""
+    try:
+        # Get database
+        db = await get_database()
+        service = ProductService(db)
+        
+        # Validate request data
+        try:
+            inventory_data = InventoryAdjustRequest(**request.json)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
+        
+        # Get user ID and roles
+        user_id = current_user.get("sub")
+        user_roles = current_user.get("roles", [])
+        
+        # Adjust inventory
+        try:
+            product = await service.adjust_inventory(
+                product_id=product_id,
+                quantity=inventory_data.quantity,
+                user_id=user_id,
+                user_roles=user_roles
+            )
+        except PermissionError as e:
+            return jsonify({"error": str(e)}), 403
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        
+        if not product:
+            return jsonify({"error": "Product not found"}), 404
+        
+        # Return updated product
+        response = ProductResponse.from_model(product)
+        return jsonify(response.model_dump()), 200
+        
+    except Exception as e:
+        logger.error(f"Error adjusting inventory: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@bp.route("/<product_id>/inventory", methods=["GET"])
+@async_route
+async def get_inventory(product_id):
+    """Get product inventory information (Public access)"""
+    try:
+        # Get database
+        db = await get_database()
+        service = ProductService(db)
+        
+        # Get inventory
+        inventory = await service.get_inventory(product_id)
+        
+        if not inventory:
+            return jsonify({"error": "Product not found"}), 404
+        
+        # Return response
+        response = InventoryResponse(**inventory)
+        return jsonify(response.model_dump()), 200
+        
+    except Exception as e:
+        logger.error(f"Error getting inventory: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@bp.route("/<product_id>/inventory/reserve", methods=["POST"])
+@require_auth
+@async_route
+async def reserve_inventory(product_id, current_user):
+    """Reserve inventory for an order (Authenticated users)"""
+    try:
+        # Get database
+        db = await get_database()
+        service = ProductService(db)
+        
+        # Validate request data
+        try:
+            reserve_data = InventoryReserveRequest(**request.json)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
+        
+        # Reserve inventory
+        try:
+            product = await service.reserve_inventory(
+                product_id=product_id,
+                quantity=reserve_data.quantity,
+                order_id=reserve_data.order_id
+            )
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        
+        if not product:
+            return jsonify({"error": "Product not found"}), 404
+        
+        # Return updated product
+        response = ProductResponse.from_model(product)
+        return jsonify(response.model_dump()), 200
+        
+    except Exception as e:
+        logger.error(f"Error reserving inventory: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@bp.route("/<product_id>/inventory/release", methods=["POST"])
+@require_auth
+@async_route
+async def release_inventory(product_id, current_user):
+    """Release reserved inventory (e.g., on order cancel) (Authenticated users)"""
+    try:
+        # Get database
+        db = await get_database()
+        service = ProductService(db)
+        
+        # Validate request data
+        try:
+            release_data = InventoryReleaseRequest(**request.json)
+        except ValidationError as e:
+            return jsonify({"error": "Validation error", "details": e.errors()}), 400
+        
+        # Release inventory
+        try:
+            product = await service.release_inventory(
+                product_id=product_id,
+                quantity=release_data.quantity,
+                order_id=release_data.order_id
+            )
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        
+        if not product:
+            return jsonify({"error": "Product not found"}), 404
+        
+        # Return updated product
+        response = ProductResponse.from_model(product)
+        return jsonify(response.model_dump()), 200
+        
+    except Exception as e:
+        logger.error(f"Error releasing inventory: {e}")
         return jsonify({"error": "Internal server error"}), 500
 

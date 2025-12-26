@@ -13,12 +13,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "shared"))
 
 from shared.logging_config import get_logger
+from shared.config import get_settings
 
-logger = get_logger(__name__, "product-service")
+logger = get_logger(__name__, os.getenv("SERVICE_NAME", "product-service"))
 
-# JWT Configuration (should match auth-service)
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+# Get JWT configuration from shared config (matches auth-service)
+settings = get_settings()
+JWT_SECRET_KEY = settings.app.jwt_secret_key
+JWT_ALGORITHM = settings.app.jwt_algorithm
 
 
 def decode_token(token: str) -> Optional[Dict[str, Any]]:
@@ -41,24 +43,33 @@ def get_current_user() -> Optional[Dict[str, Any]]:
     """Extract and validate user from Authorization header"""
     auth_header = request.headers.get("Authorization")
     if not auth_header:
+        logger.debug("No Authorization header found")
         return None
     
     try:
         # Extract Bearer token
         scheme, token = auth_header.split(" ", 1)
         if scheme.lower() != "bearer":
+            logger.warning(f"Invalid authorization scheme: {scheme}")
             return None
     except ValueError:
+        logger.warning("Malformed Authorization header")
         return None
     
     # Decode token
     payload = decode_token(token)
     if not payload:
+        logger.warning("Failed to decode token")
         return None
     
     # Verify it's an access token
     if payload.get("type") != "access":
-        logger.warning("Token provided is not an access token")
+        logger.warning(f"Invalid token type: {payload.get('type')}. Expected 'access' token.")
+        return None
+    
+    # Verify required fields
+    if not payload.get("sub"):
+        logger.warning("Token missing user ID (sub)")
         return None
     
     return payload
@@ -70,10 +81,17 @@ def require_auth(f):
     def decorated_function(*args, **kwargs):
         user_data = get_current_user()
         if not user_data:
-            return jsonify({"error": "Invalid or expired token"}), 401
+            logger.warning("Unauthenticated access attempt")
+            response = jsonify({
+                "error": "Invalid or expired token",
+                "detail": "Authentication required. Please provide a valid access token."
+            })
+            response.headers["WWW-Authenticate"] = "Bearer"
+            return response, 401
         
         # Add user data to kwargs for use in route
         kwargs["current_user"] = user_data
+        logger.debug(f"Authenticated user: {user_data.get('sub')} (roles: {user_data.get('roles', [])})")
         # Return the function call (may be coroutine if async)
         # The async_route decorator will handle execution
         return f(*args, **kwargs)
@@ -97,9 +115,11 @@ def require_role(role_name: str):
                     f"User {current_user.get('sub')} attempted to access {role_name}-only resource. "
                     f"User roles: {user_roles}"
                 )
-                return jsonify({
+                response = jsonify({
                     "error": f"Access denied. Required role: {role_name}"
-                }), 403
+                })
+                response.headers["WWW-Authenticate"] = "Bearer"
+                return response, 403
             
             return f(*args, **kwargs)
         
@@ -123,9 +143,11 @@ def require_any_role(*role_names: str):
                     f"User {current_user.get('sub')} attempted to access resource requiring one of "
                     f"{role_names}. User roles: {user_roles}"
                 )
-                return jsonify({
+                response = jsonify({
                     "error": f"Access denied. Required one of the following roles: {', '.join(role_names)}"
-                }), 403
+                })
+                response.headers["WWW-Authenticate"] = "Bearer"
+                return response, 403
             
             return f(*args, **kwargs)
         

@@ -57,6 +57,10 @@ class AppSettings(BaseSettings):
     service_name: str 
     json_output: bool
     log_file: str
+    jwt_secret_key: str
+    jwt_algorithm: str
+    access_token_expire_minutes: int
+    refresh_token_expire_days: int
 
 class Settings(BaseSettings):
     """Main settings class combining all configurations"""

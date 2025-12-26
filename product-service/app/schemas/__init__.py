@@ -1,10 +1,7 @@
-"""
-Request and response schemas for product API
-"""
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
-from app.models import ProductStatus, ProductImage, ProductVariant
+from app.models import ProductStatus, ProductImage, ProductVariant, Product
 
 
 class ProductCreateRequest(BaseModel):
@@ -65,6 +62,7 @@ class ProductResponse(BaseModel):
     compare_at_price: Optional[float]
     cost_price: Optional[float]
     stock: int
+    reserved_stock: int
     status: ProductStatus
     category: Optional[str]
     categories: List[str]
@@ -95,6 +93,7 @@ class ProductResponse(BaseModel):
             compare_at_price=product.compare_at_price,
             cost_price=product.cost_price,
             stock=product.stock,
+            reserved_stock=product.reserved_stock,
             status=product.status,
             category=product.category,
             categories=product.categories,
@@ -115,6 +114,19 @@ class ProductResponse(BaseModel):
         )
 
 
+class InventoryReserveRequest(BaseModel):
+    """Request schema for reserving inventory"""
+    quantity: int = Field(..., description="Quantity to reserve", gt=0)
+    order_id: Optional[str] = Field(None, description="Order ID for tracking", max_length=100)
+    expires_at: Optional[datetime] = Field(None, description="Reservation expiration time")
+
+
+class InventoryReleaseRequest(BaseModel):
+    """Request schema for releasing reserved inventory"""
+    quantity: int = Field(..., description="Quantity to release", gt=0)
+    order_id: Optional[str] = Field(None, description="Order ID for tracking", max_length=100)
+
+
 class ProductListResponse(BaseModel):
     """Response schema for product list"""
     products: List[ProductResponse]
@@ -122,4 +134,19 @@ class ProductListResponse(BaseModel):
     page: int
     limit: int
     pages: int
+
+
+class InventoryAdjustRequest(BaseModel):
+    """Request schema for adjusting inventory"""
+    quantity: int = Field(..., description="Quantity to adjust (positive to increase, negative to decrease)")
+    reason: Optional[str] = Field(None, description="Reason for adjustment", max_length=500)
+
+
+class InventoryResponse(BaseModel):
+    """Response schema for inventory information"""
+    product_id: str
+    total_stock: int = Field(..., description="Total stock quantity")
+    reserved_stock: int = Field(..., description="Reserved stock quantity")
+    available_stock: int = Field(..., description="Available stock (total - reserved)")
+    status: ProductStatus = Field(..., description="Product status")
 

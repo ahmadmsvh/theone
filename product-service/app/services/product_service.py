@@ -1,20 +1,13 @@
-"""
-Product service with business logic
-"""
 import uuid
 from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
-import sys
-from pathlib import Path
-
-# Add shared to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "shared"))
-
+import os
 from shared.logging_config import get_logger
-from app.models import Product, ProductCreate, ProductUpdate
+from app.models import Product, ProductStatus
+from app.schemas import ProductCreateRequest, ProductUpdateRequest
 from app.repositories.product_repository import ProductRepository
 
-logger = get_logger(__name__, "product-service")
+logger = get_logger(__name__, os.getenv("SERVICE_NAME"))
 
 
 class ProductService:
@@ -30,7 +23,7 @@ class ProductService:
     
     async def create_product(
         self,
-        product_data: ProductCreate,
+        product_data: ProductCreateRequest,
         user_id: str,
         vendor_id: Optional[str] = None
     ) -> Product:
@@ -49,10 +42,7 @@ class ProductService:
         
         # Set vendor_id if provided
         if vendor_id:
-            # Update the product data to include vendor_id
-            product_dict = product_data.model_dump(exclude_none=True)
-            product_dict["vendor_id"] = vendor_id
-            product_data = ProductCreate(**product_dict)
+            product_data.vendor_id = vendor_id
         
         # Create product
         product = await self.repository.create(product_data, user_id)
@@ -93,7 +83,7 @@ class ProductService:
     async def update_product(
         self,
         product_id: str,
-        product_data: ProductUpdate,
+        product_data: ProductUpdateRequest,
         user_id: str,
         user_roles: list[str]
     ) -> Optional[Product]:
@@ -118,4 +108,75 @@ class ProductService:
     async def delete_product(self, product_id: str) -> bool:
         """Delete a product"""
         return await self.repository.delete(product_id)
+    
+    async def adjust_inventory(
+        self,
+        product_id: str,
+        quantity: int,
+        user_id: str,
+        user_roles: list[str]
+    ) -> Optional[Product]:
+        """Adjust product inventory (increase or decrease)"""
+        # Check if product exists
+        product = await self.repository.get_by_id(product_id)
+        if not product:
+            return None
+        
+        # Authorization: Vendor can only modify their own products, Admin can modify any
+        if "Vendor" in user_roles and "Admin" not in user_roles:
+            if product.vendor_id and product.vendor_id != user_id:
+                raise PermissionError("You can only adjust inventory for your own products")
+        
+        # Adjust stock
+        return await self.repository.adjust_stock(product_id, quantity)
+    
+    async def get_inventory(self, product_id: str) -> Optional[dict]:
+        """Get inventory information for a product"""
+        product = await self.repository.get_by_id(product_id)
+        if not product:
+            return None
+        
+        available_stock = product.stock - product.reserved_stock
+        
+        return {
+            "product_id": str(product.id),
+            "total_stock": product.stock,
+            "reserved_stock": product.reserved_stock,
+            "available_stock": available_stock,
+            "status": product.status
+        }
+    
+    async def reserve_inventory(
+        self,
+        product_id: str,
+        quantity: int,
+        order_id: Optional[str] = None
+    ) -> Optional[Product]:
+        """Reserve inventory for an order"""
+        # Check if product exists
+        product = await self.repository.get_by_id(product_id)
+        if not product:
+            return None
+        
+        # Check if product is active
+        if product.status != ProductStatus.ACTIVE:
+            raise ValueError(f"Cannot reserve inventory for product with status: {product.status}")
+        
+        # Reserve stock
+        return await self.repository.reserve_stock(product_id, quantity)
+    
+    async def release_inventory(
+        self,
+        product_id: str,
+        quantity: int,
+        order_id: Optional[str] = None
+    ) -> Optional[Product]:
+        """Release reserved inventory (e.g., on order cancel)"""
+        # Check if product exists
+        product = await self.repository.get_by_id(product_id)
+        if not product:
+            return None
+        
+        # Release stock
+        return await self.repository.release_stock(product_id, quantity)
 

@@ -1,16 +1,149 @@
-2025-12-25 18:38:44 - root - INFO - Logging configured for service: auth-service
-2025-12-25 18:38:44 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
-2025-12-25 18:38:44 - app.core.database - INFO - Session factory created
-2025-12-25 18:38:44 - root - INFO - Logging configured for service: auth-service
-2025-12-25 18:41:58 - root - INFO - Logging configured for service: auth-service
-2025-12-25 18:41:58 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
-2025-12-25 18:41:58 - app.core.database - INFO - Session factory created
-2025-12-25 18:41:58 - root - INFO - Logging configured for service: auth-service
-2025-12-25 18:42:03 - app.core.database - DEBUG - Connection checked out from pool
-2025-12-25 18:42:03 - app.services.user_service - WARNING - Invalid password attempt for user: user@example.com
-2025-12-25 18:42:03 - app.api.v1.auth - WARNING - Failed login attempt for email: user@example.com
-2025-12-25 18:42:03 - app.core.database - DEBUG - Connection returned to pool
-2025-12-25 18:46:13 - root - INFO - Logging configured for service: auth-service
-2025-12-25 18:46:14 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
-2025-12-25 18:46:14 - app.core.database - INFO - Session factory created
-2025-12-25 18:46:14 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:43:25 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-25 19:43:25 - app.services.user_service - WARNING - Invalid password attempt for user: user@example.com
+2025-12-25 19:43:25 - app.api.v1.auth - WARNING - Failed login attempt for email: user@example.com
+2025-12-25 19:43:25 - app.core.database - DEBUG - Connection returned to pool
+2025-12-25 19:46:26 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:46:26 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:46:26 - app.core.database - INFO - Session factory created
+2025-12-25 19:46:26 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:46:29 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:46:29 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:46:29 - app.core.database - INFO - Session factory created
+2025-12-25 19:46:33 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:46:33 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:46:33 - app.core.database - INFO - Session factory created
+2025-12-25 19:46:35 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:46:35 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:46:35 - app.core.database - INFO - Session factory created
+2025-12-25 19:46:35 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:46:35 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:46:35 - app.core.database - INFO - Session factory created
+2025-12-25 19:46:36 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:47:01 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:47:01 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:47:01 - app.core.database - INFO - Session factory created
+2025-12-25 19:47:06 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:47:06 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:47:06 - app.core.database - INFO - Session factory created
+2025-12-25 19:49:49 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:49:49 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:49:49 - app.core.database - INFO - Session factory created
+2025-12-25 19:49:49 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:49:50 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:49:50 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:49:50 - app.core.database - INFO - Session factory created
+2025-12-25 19:49:51 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:49:51 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:49:51 - app.core.database - INFO - Session factory created
+2025-12-25 19:49:52 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:00 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:00 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:50:00 - app.core.database - INFO - Session factory created
+2025-12-25 19:50:01 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:01 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:50:01 - app.core.database - INFO - Session factory created
+2025-12-25 19:50:02 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:10 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:10 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:50:10 - app.core.database - INFO - Session factory created
+2025-12-25 19:50:12 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:12 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:50:12 - app.core.database - INFO - Session factory created
+2025-12-25 19:50:16 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:16 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:50:16 - app.core.database - INFO - Session factory created
+2025-12-25 19:50:16 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:22 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:22 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:50:22 - app.core.database - INFO - Session factory created
+2025-12-25 19:50:24 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:50:24 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 19:50:24 - app.core.database - INFO - Session factory created
+2025-12-25 19:50:24 - root - INFO - Logging configured for service: auth-service
+2025-12-25 19:51:14 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-25 19:51:15 - app.services.user_service - INFO - User authenticated successfully: user@example.com (ID: 2e69696c-c279-4fa5-ba90-5210dc2fb1c2)
+2025-12-25 19:51:15 - app.core.database - DEBUG - Connection returned to pool
+2025-12-25 19:51:15 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-25 19:51:15 - app.repositories.refresh_token_repository - INFO - Refresh token created for user: 2e69696c-c279-4fa5-ba90-5210dc2fb1c2
+2025-12-25 19:51:15 - shared.database - INFO - Redis connection established successfully
+2025-12-25 19:51:15 - app.services.session_service - DEBUG - Cached user data for user: 2e69696c-c279-4fa5-ba90-5210dc2fb1c2
+2025-12-25 19:51:15 - app.api.v1.auth - INFO - User logged in successfully: user@example.com (ID: 2e69696c-c279-4fa5-ba90-5210dc2fb1c2)
+2025-12-25 19:51:15 - app.core.database - DEBUG - Connection returned to pool
+2025-12-25 20:59:56 - root - INFO - Logging configured for service: auth-service
+2025-12-25 20:59:56 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 20:59:56 - app.core.database - INFO - Session factory created
+2025-12-25 20:59:56 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:03:54 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:03:54 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:03:54 - app.core.database - INFO - Session factory created
+2025-12-25 21:03:55 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:08:00 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:08:00 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:08:00 - app.core.database - INFO - Session factory created
+2025-12-25 21:08:00 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:25 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:26 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:14:26 - app.core.database - INFO - Session factory created
+2025-12-25 21:14:26 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:27 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:27 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:14:27 - app.core.database - INFO - Session factory created
+2025-12-25 21:14:27 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:28 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:28 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:14:28 - app.core.database - INFO - Session factory created
+2025-12-25 21:14:29 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:30 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:30 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:14:30 - app.core.database - INFO - Session factory created
+2025-12-25 21:14:30 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:32 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:32 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:14:32 - app.core.database - INFO - Session factory created
+2025-12-25 21:14:32 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:35 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:35 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:14:35 - app.core.database - INFO - Session factory created
+2025-12-25 21:14:35 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:40 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:40 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:14:40 - app.core.database - INFO - Session factory created
+2025-12-25 21:14:40 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:47 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:14:47 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:14:47 - app.core.database - INFO - Session factory created
+2025-12-25 21:14:47 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:30:53 - root - INFO - Logging configured for service: auth-service
+2025-12-25 21:30:53 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-25 21:30:53 - app.core.database - INFO - Session factory created
+2025-12-25 21:30:53 - root - INFO - Logging configured for service: auth-service
+2025-12-26 01:04:20 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-26 01:04:20 - app.services.user_service - INFO - User authenticated successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-26 01:04:20 - app.core.database - DEBUG - Connection returned to pool
+2025-12-26 01:04:20 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-26 01:04:20 - app.repositories.refresh_token_repository - INFO - Refresh token created for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-26 01:04:20 - shared.database - INFO - Redis connection established successfully
+2025-12-26 01:04:20 - app.services.session_service - DEBUG - Cached user data for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-26 01:04:20 - app.api.v1.auth - INFO - User logged in successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-26 01:04:20 - app.core.database - DEBUG - Connection returned to pool
+2025-12-26 01:20:11 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-26 01:20:11 - app.services.user_service - INFO - User authenticated successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-26 01:20:11 - app.core.database - DEBUG - Connection returned to pool
+2025-12-26 01:20:11 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-26 01:20:11 - app.repositories.refresh_token_repository - INFO - Refresh token created for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-26 01:20:11 - app.services.session_service - DEBUG - Cached user data for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-26 01:20:11 - app.api.v1.auth - INFO - User logged in successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-26 01:20:11 - app.core.database - DEBUG - Connection returned to pool
+2025-12-26 01:30:32 - root - INFO - Logging configured for service: auth-service
+2025-12-26 01:30:32 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
+2025-12-26 01:30:32 - app.core.database - INFO - Session factory created
+2025-12-26 01:30:32 - root - INFO - Logging configured for service: auth-service
+2025-12-26 02:35:53 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-26 02:35:54 - app.services.user_service - INFO - User authenticated successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-26 02:35:54 - app.core.database - DEBUG - Connection returned to pool
+2025-12-26 02:35:54 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-26 02:35:54 - app.repositories.refresh_token_repository - INFO - Refresh token created for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-26 02:35:54 - shared.database - INFO - Redis connection established successfully
+2025-12-26 02:35:54 - app.services.session_service - DEBUG - Cached user data for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-26 02:35:54 - app.api.v1.auth - INFO - User logged in successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-26 02:35:54 - app.core.database - DEBUG - Connection returned to pool
