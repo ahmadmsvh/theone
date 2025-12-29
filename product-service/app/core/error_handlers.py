@@ -1,9 +1,9 @@
 
 from functools import wraps
-from flask import jsonify, request
+from flask import jsonify
 from pydantic import ValidationError as PydanticValidationError
 import os
-from typing import Callable, Any
+from typing import Callable
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__, os.getenv("SERVICE_NAME"))
@@ -51,39 +51,7 @@ def handle_api_errors(f: Callable) -> Callable:
     return wrapper
 
 
-def validate_request(schema_class):
-    def decorator(f: Callable) -> Callable:
-        @wraps(f)
-        async def wrapper(*args, **kwargs):
-            try:
-                data = schema_class(**request.json)
-                kwargs['validated_data'] = data
-                return await f(*args, **kwargs)
-            except PydanticValidationError as e:
-                logger.warning(f"Request validation failed in {f.__name__}: {e}")
-                return jsonify({
-                    "error": "Validation error",
-                    "details": e.errors()
-                }), 400
-        return wrapper
-    return decorator
-
-
 def not_found_response(message: str = "Resource not found") -> tuple:
+    """Helper to create a consistent 404 response."""
     return jsonify({"error": message}), 404
-
-
-def bad_request_response(message: str, details: list = None) -> tuple:
-    response = {"error": message}
-    if details:
-        response["details"] = details
-    return jsonify(response), 400
-
-
-def forbidden_response(message: str = "Access denied") -> tuple:
-    return jsonify({"error": message}), 403
-
-
-def internal_error_response(message: str = "Internal server error") -> tuple:
-    return jsonify({"error": message}), 500
 
