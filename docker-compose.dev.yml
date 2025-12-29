@@ -106,10 +106,12 @@ services:
     container_name: auth-service
     ports:
       - "8001:8001"
+      - "5678:5678"  # Debugpy port
     environment:
       - SERVICE_NAME=auth-service 
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_db
       - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
     depends_on:
       postgres:
         condition: service_healthy
@@ -118,9 +120,15 @@ services:
     volumes:
       - ./auth-service:/app/auth-service
       - ./shared:/app/shared
+      - /workspace:/workspace
     networks:
       - theone-network
     restart: unless-stopped
+    command: >
+      sh -c "
+        pip install debugpy &&
+        python -m debugpy --listen 0.0.0.0:5678 -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+      "
 
   notification-service:
     build:
@@ -129,10 +137,12 @@ services:
     container_name: notification-service
     ports:
       - "5002:5002"
+      - "5681:5681"  # Debugpy port
     environment:
       - SERVICE_NAME=notification-service
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -141,9 +151,15 @@ services:
     volumes:
       - ./notification-service:/app/notification-service
       - ./shared:/app/shared
+      - /workspace:/workspace
     networks:
       - theone-network
     restart: unless-stopped
+    command: >
+      sh -c "
+        pip install debugpy &&
+        python -m debugpy --listen 0.0.0.0:5681 --wait-for-client -m flask run --host 0.0.0.0 --port 5002 --reload --debugger
+      "
 
   product-service:
     build:
@@ -152,12 +168,14 @@ services:
     container_name: product-service
     ports:
       - "5001:5001"
+      - "5679:5679"  # Debugpy port
     environment:
       - SERVICE_NAME=product-service
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_db
       - MONGODB_URL=mongodb://admin:admin@mongodb:27017/theone_db?authSource=admin
       - MONGODB_DATABASE=theone_db
       - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
       # - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       # - RABBITMQ_EXCHANGE=ecommerce.events
       # - RABBITMQ_QUEUE_PREFIX=product-service
@@ -174,9 +192,15 @@ services:
     volumes:
       - ./product-service:/app/product-service
       - ./shared:/app/shared
+      - /workspace:/workspace
     networks:
       - theone-network
     restart: unless-stopped
+    command: >
+      sh -c "
+        pip install debugpy &&
+        python -m debugpy --listen 0.0.0.0:5679 --wait-for-client -m flask run --host 0.0.0.0 --port 5001 --reload --debugger
+      "
 
   order-service:
     build:
@@ -185,11 +209,13 @@ services:
     container_name: order-service
     ports:
       - "8002:8002"
+      - "5680:5680"  # Debugpy port
     environment:
       - SERVICE_NAME=order-service
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_db
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
     depends_on:
       postgres:
         condition: service_healthy
@@ -200,9 +226,15 @@ services:
     volumes:
       - ./order-service:/app/order-service
       - ./shared:/app/shared
+      - /workspace:/workspace
     networks:
       - theone-network
     restart: unless-stopped
+    command: >
+      sh -c "
+        pip install debugpy &&
+        python -m debugpy --listen 0.0.0.0:5680 -m uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+      "
 
   nginx:
     image: nginx:alpine

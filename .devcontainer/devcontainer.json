@@ -1,0 +1,71 @@
+{
+  "name": "TheOne Development",
+  "dockerComposeFile": "../docker-compose.dev.yml",
+  "service": "auth-service",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.analysis.extraPaths": [
+          "/workspace/auth-service",
+          "/workspace/product-service",
+          "/workspace/order-service",
+          "/workspace/notification-service",
+          "/workspace/shared"
+        ],
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false
+      }
+    }
+  },
+  
+  "forwardPorts": [8001, 5001, 5002, 8002, 5432, 27017, 6379, 5672, 15672, 5678, 5679, 5680, 5681],
+  "portsAttributes": {
+    "8001": {
+      "label": "Auth Service",
+      "onAutoForward": "notify"
+    },
+    "5001": {
+      "label": "Product Service",
+      "onAutoForward": "notify"
+    },
+    "5002": {
+      "label": "Notification Service",
+      "onAutoForward": "notify"
+    },
+    "8002": {
+      "label": "Order Service",
+      "onAutoForward": "notify"
+    },
+    "5678": {
+      "label": "Debug: Auth Service",
+      "onAutoForward": "silent"
+    },
+    "5679": {
+      "label": "Debug: Product Service",
+      "onAutoForward": "silent"
+    },
+    "5680": {
+      "label": "Debug: Order Service",
+      "onAutoForward": "silent"
+    },
+    "5681": {
+      "label": "Debug: Notification Service",
+      "onAutoForward": "silent"
+    }
+  },
+  
+  "postCreateCommand": "pip install debugpy",
+  "remoteUser": "root"
+}
+
+
