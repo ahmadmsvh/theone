@@ -14,3 +14,4 @@
 2025-12-25 18:46:14 - app.core.database - INFO - Database engine created with pool_size=5, max_overflow=10
 2025-12-25 18:46:14 - app.core.database - INFO - Session factory created
 2025-12-25 18:46:14 - root - INFO - Logging configured for service: auth-service
+2025-12-29 01:21:16 - root - INFO - Logging configured for service: auth-service

@@ -135,3 +135,6 @@
 2025-12-25 18:47:26 - werkzeug - INFO - 172.18.0.1 - - [25/Dec/2025 18:47:26] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
 2025-12-25 18:47:34 - pymongo.topology - DEBUG - {"topologyId": {"$oid": "694d86bc477fd7f3b4cd31bf"}, "driverConnectionId": 1, "serverConnectionId": 36, "serverHost": "mongodb", "serverPort": 27017, "awaited": true, "durationMS": 10009.99162900007, "reply": "{\"isWritablePrimary\": true, \"topologyVersion\": {\"processId\": {\"$oid\": \"694d86691f7b2340491233d3\"}}, \"maxBsonObjectSize\": 16777216, \"maxMessageSizeBytes\": 48000000, \"maxWriteBatchSize\": 100000, \"localTime\": {\"$date\": \"2025-12-25T18:47:34.430Z\"}, \"logicalSessionTimeoutMinutes\": 30, \"connectionId\": 36, \"maxWireVersion\": 21, \"ok\": 1.0}", "message": "Server heartbeat succeeded"}
 2025-12-25 18:47:34 - pymongo.topology - DEBUG - {"topologyId": {"$oid": "694d86bc477fd7f3b4cd31bf"}, "driverConnectionId": 1, "serverConnectionId": 36, "serverHost": "mongodb", "serverPort": 27017, "awaited": true, "message": "Server heartbeat started"}
+2025-12-29 01:21:16 - root - INFO - Logging configured for service: product-service
+2025-12-29 01:21:16 - werkzeug - WARNING -  * Debugger is active!
+2025-12-29 01:21:16 - werkzeug - INFO -  * Debugger PIN: 322-033-659
