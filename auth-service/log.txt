@@ -244,3 +244,19 @@
 2025-12-29 00:13:14 - app.services.session_service - DEBUG - Cached user data for user: 0d911cf9-2282-4785-ab09-874bb951e88e
 2025-12-29 00:13:14 - app.api.v1.auth - INFO - User logged in successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
 2025-12-29 00:13:14 - app.core.database - DEBUG - Connection returned to pool
+2025-12-29 00:26:18 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-29 00:26:18 - app.services.user_service - INFO - User authenticated successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-29 00:26:18 - app.core.database - DEBUG - Connection returned to pool
+2025-12-29 00:26:18 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-29 00:26:18 - app.repositories.refresh_token_repository - INFO - Refresh token created for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-29 00:26:18 - app.services.session_service - DEBUG - Cached user data for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-29 00:26:18 - app.api.v1.auth - INFO - User logged in successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-29 00:26:18 - app.core.database - DEBUG - Connection returned to pool
+2025-12-29 00:37:46 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-29 00:37:47 - app.services.user_service - INFO - User authenticated successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-29 00:37:47 - app.core.database - DEBUG - Connection returned to pool
+2025-12-29 00:37:47 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-29 00:37:47 - app.repositories.refresh_token_repository - INFO - Refresh token created for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-29 00:37:47 - app.services.session_service - DEBUG - Cached user data for user: 0d911cf9-2282-4785-ab09-874bb951e88e
+2025-12-29 00:37:47 - app.api.v1.auth - INFO - User logged in successfully: ahmadmsvh@gmail.com (ID: 0d911cf9-2282-4785-ab09-874bb951e88e)
+2025-12-29 00:37:47 - app.core.database - DEBUG - Connection returned to pool

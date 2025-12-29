@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 from bson import ObjectId
@@ -95,8 +95,8 @@ class Product(BaseModel):
     vendor_id: Optional[str] = Field(None, description="Vendor ID (for vendor lookup)", max_length=100)
     barcode: Optional[str] = Field(None, description="Product barcode", max_length=100)
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
-    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Creation timestamp")
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Last update timestamp")
     created_by: Optional[str] = Field(None, description="User ID who created the product")
     updated_by: Optional[str] = Field(None, description="User ID who last updated the product")
     

@@ -1,21 +1,27 @@
 import uuid
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import os
 from shared.logging_config import get_logger
 from app.models import Product, ProductStatus
 from app.schemas import ProductCreateRequest, ProductUpdateRequest
 from app.repositories.product_repository import ProductRepository
-from app.services.event_publisher import get_event_publisher
+
+if TYPE_CHECKING:
+    from app.services.event_publisher import ProductEventPublisher
 
 logger = get_logger(__name__, os.getenv("SERVICE_NAME"))
 
 
 class ProductService:
 
-    def __init__(self, database: AsyncIOMotorDatabase):
-        self.repository = ProductRepository(database)
-        self.event_publisher = get_event_publisher()
+    def __init__(
+        self,
+        repository: ProductRepository,
+        event_publisher: Optional["ProductEventPublisher"] = None
+    ):
+        self.repository = repository
+        self.event_publisher = event_publisher
     
     def generate_sku(self) -> str:
         return f"PRD-{uuid.uuid4().hex[:8].upper()}"
@@ -41,10 +47,11 @@ class ProductService:
         product = await self.repository.create(product_data, user_id)
         logger.info(f"Product created: {product.id} (SKU: {product.sku})")
         
-        try:
-            await self.event_publisher.publish_product_created(product)
-        except Exception as e:
-            logger.error(f"Failed to publish product.created event: {e}", exc_info=True)
+        if self.event_publisher:
+            try:
+                await self.event_publisher.publish_product_created(product)
+            except Exception as e:
+                logger.error(f"Failed to publish product.created event: {e}", exc_info=True)
         
         return product
     
@@ -98,7 +105,7 @@ class ProductService:
         
         updated_product = await self.repository.update(product_id, product_data, user_id)
         
-        if updated_product:
+        if updated_product and self.event_publisher:
             try:
                 await self.event_publisher.publish_product_updated(updated_product)
             except Exception as e:
@@ -128,7 +135,7 @@ class ProductService:
         
         updated_product = await self.repository.adjust_stock(product_id, quantity)
         
-        if updated_product:
+        if updated_product and self.event_publisher:
             try:
                 quantity_change = updated_product.stock - old_stock
                 await self.event_publisher.publish_inventory_updated(updated_product, quantity_change)
@@ -167,7 +174,7 @@ class ProductService:
         
         updated_product = await self.repository.reserve_stock(product_id, quantity)
         
-        if updated_product:
+        if updated_product and self.event_publisher:
             try:
                 await self.event_publisher.publish_inventory_reserved(
                     updated_product, 
@@ -191,7 +198,7 @@ class ProductService:
         
         updated_product = await self.repository.release_stock(product_id, quantity)
         
-        if updated_product:
+        if updated_product and self.event_publisher:
             try:
                 await self.event_publisher.publish_inventory_released(
                     updated_product, 
@@ -202,4 +209,24 @@ class ProductService:
                 logger.error(f"Failed to publish inventory.released event: {e}", exc_info=True)
         
         return updated_product
+
+    
+async def get_product_service(
+    database: Optional[AsyncIOMotorDatabase] = None,
+    repository: Optional[ProductRepository] = None,
+    event_publisher: Optional["ProductEventPublisher"] = None
+) -> ProductService:
+
+    from app.core.database import get_database
+    from app.services.event_publisher import get_event_publisher as get_ep
+    
+    if repository is None:
+        if database is None:
+            database = await get_database()
+        repository = ProductRepository(database)
+    
+    if event_publisher is None:
+        event_publisher = get_ep()
+    
+    return ProductService(repository=repository, event_publisher=event_publisher)
 
