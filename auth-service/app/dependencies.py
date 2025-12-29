@@ -1,4 +1,4 @@
-from typing import Generator, List, Optional
+from typing import Generator, Optional
 from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -8,12 +8,25 @@ from app.core.database import get_db
 from app.core.security import decode_token
 from app.models import User
 from app.services.user_service import UserService
+from app.services.role_service import RoleService
 from app.services.session_service import SessionService
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__, "auth-service")
 
 security = HTTPBearer()
+
+
+def get_user_service(db: Session = Depends(get_db)) -> UserService:
+    return UserService(db)
+
+
+def get_role_service(db: Session = Depends(get_db)) -> RoleService:
+    return RoleService(db)
+
+
+def get_session_service() -> SessionService:
+    return SessionService()
 
 
 
@@ -60,12 +73,12 @@ async def require_auth(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    session_service = SessionService()
+    session_service = get_session_service()
     cached_user_data = session_service.get_user_data(user_id)
     
     if cached_user_data:
         logger.debug(f"Found cached user data for user: {user_id}")
-        user_service = UserService(db)
+        user_service = get_user_service(db)
         user = user_service.get_user_by_id(user_id)
         if not user:
             session_service.invalidate_user_cache(user_id)
@@ -77,7 +90,7 @@ async def require_auth(
             )
         return user
     else:
-        user_service = UserService(db)
+        user_service = get_user_service(db)
         user = user_service.get_user_by_id(user_id)
         if not user:
             logger.warning(f"User not found for authenticated token: {user_id}")

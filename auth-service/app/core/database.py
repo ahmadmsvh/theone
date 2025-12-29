@@ -5,20 +5,17 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from contextlib import contextmanager
 from typing import Generator, Optional
-from pathlib import Path
-import os
 from shared.config import get_settings
 from shared.logging_config import get_logger, setup_logging
 from app.models import Base
 
 settings = get_settings()
-setup_logging(service_name=os.getenv("SERVICE_NAME"), log_level=settings.app.log_level)
+setup_logging(service_name=settings.app.service_name, log_level=settings.app.log_level)
 
-logger = get_logger(__name__, settings.app.service_name)
+logger = get_logger(__name__, "auth-service")
 logger.setLevel("DEBUG")
 
 class DatabaseManager:
-    """SQLAlchemy database connection manager with connection pooling"""
     
     def __init__(self, database_url: Optional[str] = None):
         self.settings = get_settings()
@@ -27,7 +24,6 @@ class DatabaseManager:
         self._session_factory: Optional[sessionmaker] = None
     
     def create_engine(self) -> Engine:
-        """Create SQLAlchemy engine with connection pooling"""
         if self._engine is None:
             try:
                 self._engine = create_engine(
@@ -44,17 +40,14 @@ class DatabaseManager:
                 # Add connection pool event listeners
                 @event.listens_for(self._engine, "connect")
                 def set_sqlite_pragma(dbapi_conn, connection_record):
-                    """Set connection-level settings"""
                     pass
                 
                 @event.listens_for(self._engine, "checkout")
                 def receive_checkout(dbapi_conn, connection_record, connection_proxy):
-                    """Log connection checkout"""
                     logger.debug("Connection checked out from pool")
                 
                 @event.listens_for(self._engine, "checkin")
                 def receive_checkin(dbapi_conn, connection_record):
-                    """Log connection checkin"""
                     logger.debug("Connection returned to pool")
                 
                 logger.info(
@@ -69,13 +62,11 @@ class DatabaseManager:
     
     @property
     def engine(self) -> Engine:
-        """Get database engine (creates if not exists)"""
         if self._engine is None:
             self.create_engine()
         return self._engine
     
     def create_session_factory(self) -> sessionmaker:
-        """Create session factory"""
         if self._session_factory is None:
             self._session_factory = sessionmaker(
                 autocommit=False,
@@ -88,13 +79,11 @@ class DatabaseManager:
     
     @property
     def session_factory(self) -> sessionmaker:
-        """Get session factory (creates if not exists)"""
         if self._session_factory is None:
             self.create_session_factory()
         return self._session_factory
     
     def get_session(self) -> Session:
-        """Get a new database session"""
         return self.session_factory()
     
     @contextmanager
@@ -135,7 +124,6 @@ class DatabaseManager:
         }
     
     def close(self):
-        """Close all database connections and dispose of the engine"""
         if self._engine:
             self._engine.dispose()
             self._engine = None
@@ -143,7 +131,6 @@ class DatabaseManager:
             logger.info("Database connections closed")
     
     def init_db(self):
-        """Initialize database - create all tables"""
         try:
             Base.metadata.create_all(bind=self.engine)
             logger.info("Database tables created successfully")
@@ -151,8 +138,7 @@ class DatabaseManager:
             logger.error(f"Failed to create database tables: {e}")
             raise
     
-    def drop_db(self):
-        """Drop all tables - use with caution!"""
+    def drop_db(self):  
         try:
             Base.metadata.drop_all(bind=self.engine)
             logger.warning("All database tables dropped")
@@ -160,13 +146,11 @@ class DatabaseManager:
             logger.error(f"Failed to drop database tables: {e}")
             raise
 
-
-# Global database manager instance (singleton pattern)
+                
 _db_manager: Optional[DatabaseManager] = None
 
 
 def get_db_manager() -> DatabaseManager:
-    """Get global database manager instance"""
     global _db_manager
     if _db_manager is None:
         _db_manager = DatabaseManager()
@@ -187,28 +171,22 @@ def get_db() -> Generator[Session, None, None]:
         session.close()
 
 
-# Backward compatibility - expose engine and SessionLocal
 def get_engine() -> Engine:
-    """Get database engine (for backward compatibility)"""
     return get_db_manager().engine
 
 
 def get_session_local() -> sessionmaker:
-    """Get session factory (for backward compatibility)"""
     return get_db_manager().session_factory
 
 
-# Initialize engine and session factory on module import
 db_manager = get_db_manager()
 engine = db_manager.engine
 SessionLocal = db_manager.session_factory
 
 
 def init_db():
-    """Initialize database - create all tables (for backward compatibility)"""
     db_manager.init_db()
 
 
 def drop_db():
-    """Drop all tables - use with caution! (for backward compatibility)"""
     db_manager.drop_db()

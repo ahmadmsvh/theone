@@ -52,6 +52,5 @@ def handle_api_errors(f: Callable) -> Callable:
 
 
 def not_found_response(message: str = "Resource not found") -> tuple:
-    """Helper to create a consistent 404 response."""
     return jsonify({"error": message}), 404
 

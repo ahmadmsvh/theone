@@ -1,13 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
-import sys
-from pathlib import Path
-
-# Add shared to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "shared"))
 
 from app.core.database import get_db
-from app.dependencies import require_auth, require_role
+from app.dependencies import require_auth, require_role, get_role_service
 from app.models import User
 from app.schemas import (
     RoleCreateRequest,
@@ -39,9 +34,8 @@ def create_role(
     role_data: RoleCreateRequest,
     current_user: User = Depends(require_auth),
     _: None = Depends(require_role("Admin")),
-    db: Session = Depends(get_db)
+    role_service: RoleService = Depends(get_role_service)
 ):
-    role_service = RoleService(db)
     new_role = role_service.create_role(role_data)
     
     logger.info(f"Role created by admin {current_user.email}: {new_role.name}")
@@ -66,9 +60,8 @@ def create_role(
 def list_roles(
     current_user: User = Depends(require_auth),
     _: None = Depends(require_role("Admin")),
-    db: Session = Depends(get_db)
+    role_service: RoleService = Depends(get_role_service)
 ):
-    role_service = RoleService(db)
     roles = role_service.get_all_roles()
     
     return RolesListResponse(

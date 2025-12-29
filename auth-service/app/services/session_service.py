@@ -1,12 +1,8 @@
 import json
 import hashlib
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from uuid import UUID
-from datetime import datetime
-import sys
-from pathlib import Path
-
-
+from datetime import datetime, timezone
 
 from shared.database import get_redis
 from shared.logging_config import get_logger
@@ -31,7 +27,7 @@ class SessionService:
         self, 
         user_id: UUID, 
         email: str, 
-        roles: List[str]
+        roles: list[str]
     ) -> bool:
         try:
             cache_key = self._get_session_key(user_id)
@@ -100,7 +96,7 @@ class SessionService:
             payload = decode_token(token)
             if payload and "exp" in payload:
                 exp_timestamp = payload["exp"]
-                now_timestamp = datetime.utcnow().timestamp()
+                now_timestamp = datetime.now(timezone.utc).timestamp()
                 remaining_seconds = int(exp_timestamp - now_timestamp)
                 return max(0, min(remaining_seconds, self.default_ttl_seconds))
         except Exception as e:
@@ -155,7 +151,7 @@ class SessionService:
         self, 
         user_id: UUID, 
         email: str, 
-        roles: List[str]
+        roles: list[str]
     ) -> bool:
         return self.cache_user_data(user_id, email, roles)
 

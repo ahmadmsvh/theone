@@ -2,12 +2,6 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
-import sys
-import os
-from pathlib import Path
-
-# Add shared to path
-# sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "shared"))
 
 from app.core.database import get_db
 from app.core.security import create_access_token, create_refresh_token, decode_token, REFRESH_TOKEN_EXPIRE_DAYS
@@ -23,12 +17,13 @@ from app.schemas import (
     LogoutRequest,
     LogoutResponse
 )
+from app.dependencies import get_user_service, get_session_service
 from app.services.user_service import UserService
 from app.services.session_service import SessionService
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from shared.logging_config import get_logger
 
-logger = get_logger(__name__, os.getenv("SERVICE_NAME"))
+logger = get_logger(__name__, "auth-service")
 
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -45,9 +40,8 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 )
 def register_user(
     user_data: UserRegisterRequest,
-    db: Session = Depends(get_db)
+    user_service: UserService = Depends(get_user_service)
 ):
-    user_service = UserService(db)
     new_user = user_service.register_user(user_data)
     
     return UserRegisterResponse(
@@ -68,10 +62,10 @@ def register_user(
 )
 def login(
     login_data: LoginRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user_service: UserService = Depends(get_user_service),
+    session_service: SessionService = Depends(get_session_service)
 ):
-    user_service = UserService(db)
-    
     user = user_service.authenticate_user(login_data.email, login_data.password)
     if not user:
         logger.warning(f"Failed login attempt for email: {login_data.email}")
@@ -99,7 +93,6 @@ def login(
             expires_at=expires_at
         )
         
-        session_service = SessionService()
         roles = [role.name for role in user.roles]
         session_service.cache_user_data(
             user_id=user.id,
@@ -138,7 +131,9 @@ def login(
 )
 def refresh_token(
     refresh_data: RefreshTokenRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user_service: UserService = Depends(get_user_service),
+    session_service: SessionService = Depends(get_session_service)
 ):
     try:
         payload = decode_token(refresh_data.refresh_token)
@@ -156,7 +151,6 @@ def refresh_token(
                 detail="Invalid token type"
             )
         
-        session_service = SessionService()
         if session_service.is_blacklisted(refresh_data.refresh_token):
             logger.warning("Blacklisted refresh token attempted to be used")
             raise HTTPException(
@@ -190,7 +184,6 @@ def refresh_token(
             user_roles = cached_user_data["roles"]
             logger.debug(f"Using cached user data for refresh token: {user_id}")
         else:
-            user_service = UserService(db)
             user = user_service.get_user_by_id(user_uuid)
             if not user:
                 logger.warning(f"User not found for refresh token: {user_id}")
@@ -259,7 +252,8 @@ def refresh_token(
 )
 def logout(
     logout_data: LogoutRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    session_service: SessionService = Depends(get_session_service)
 ):
     try:
         payload = decode_token(logout_data.refresh_token)
@@ -283,7 +277,6 @@ def logout(
                 message="Logout successful"
             )
         
-        session_service = SessionService()
         session_service.blacklist_token(logout_data.refresh_token)
         
         refresh_token_repo = RefreshTokenRepository(db)

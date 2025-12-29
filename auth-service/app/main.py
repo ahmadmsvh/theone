@@ -1,7 +1,17 @@
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from starlette.responses import HTMLResponse
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.api.v1 import api_router
+from app.core.error_handlers import (
+    service_exception_handler,
+    validation_exception_handler,
+    sqlalchemy_exception_handler,
+    general_exception_handler
+)
+from app.core.exceptions import BaseServiceException
 
 
 app = FastAPI(
@@ -11,11 +21,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.add_exception_handler(BaseServiceException, service_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(SQLAlchemyError, sqlalchemy_exception_handler)
+app.add_exception_handler(Exception, general_exception_handler)
+
 app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():
-    """Root endpoint"""
     return {"message": "auth-service"}
 
 @app.get("/docs", include_in_schema=False)

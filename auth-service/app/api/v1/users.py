@@ -1,14 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from uuid import UUID
-import sys
-from pathlib import Path
-
-# Add shared to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "shared"))
 
 from app.core.database import get_db
-from app.dependencies import require_auth, require_role
+from app.dependencies import require_auth, require_role, get_role_service, get_user_service
 from app.models import User
 from app.schemas import (
     AssignRoleRequest,
@@ -43,11 +38,9 @@ def assign_role_to_user(
     role_data: AssignRoleRequest,
     current_user: User = Depends(require_auth),
     _: None = Depends(require_role("Admin")),
-    db: Session = Depends(get_db)
+    role_service: RoleService = Depends(get_role_service),
+    user_service: UserService = Depends(get_user_service)
 ):
-    role_service = RoleService(db)
-    user_service = UserService(db)
-    
     updated_user = role_service.assign_role_to_user(user_id, role_data.role_id)
     role = role_service.get_role_by_id(role_data.role_id)
     
@@ -80,11 +73,9 @@ def remove_role_from_user(
     role_id: int,
     current_user: User = Depends(require_auth),
     _: None = Depends(require_role("Admin")),
-    db: Session = Depends(get_db)
+    role_service: RoleService = Depends(get_role_service),
+    user_service: UserService = Depends(get_user_service)
 ):
-    role_service = RoleService(db)
-    user_service = UserService(db)
-    
     role = role_service.get_role_by_id(role_id)
     updated_user = role_service.remove_role_from_user(user_id, role_id)
     
