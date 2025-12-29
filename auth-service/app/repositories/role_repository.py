@@ -1,21 +1,15 @@
-from typing import Optional, List
+from typing import Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.models import Role, User, UserRole
-import sys
-from pathlib import Path
-
-# Add shared to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "shared"))
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__, "auth-service")
 
 
-class RoleRepository:
-    """Repository for role database operations"""
+class RoleRepository:   
     
     def __init__(self, db: Session):
 
@@ -29,7 +23,7 @@ class RoleRepository:
 
         return self.db.query(Role).filter(Role.name == name).first()
     
-    def get_all(self) -> List[Role]:
+    def get_all(self) -> list[Role]:
 
         return self.db.query(Role).all()
     
@@ -86,7 +80,7 @@ class RoleRepository:
             logger.error(f"Failed to assign role: {e}")
             raise
     
-    def remove_role_from_user(self, user_id: str, role_id: int) -> bool:
+    def remove_role_from_user(self, user_id: UUID, role_id: int) -> bool:
 
         user_role = self.db.query(UserRole).filter(
             UserRole.user_id == user_id,
@@ -102,7 +96,7 @@ class RoleRepository:
         logger.warning(f"Role {role_id} not assigned to user {user_id}")
         return False
     
-    def get_user_roles(self, user_id: UUID) -> List[Role]:
+    def get_user_roles(self, user_id: UUID) -> list[Role]:
 
         user = self.db.query(User).filter(User.id == user_id).first()
         if user:

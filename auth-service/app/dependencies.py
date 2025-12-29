@@ -1,21 +1,32 @@
-from typing import Generator, List, Optional
+from typing import Generator, Optional
 from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-import sys
-from pathlib import Path
 
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models import User
 from app.services.user_service import UserService
+from app.services.role_service import RoleService
 from app.services.session_service import SessionService
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__, "auth-service")
 
 security = HTTPBearer()
+
+
+def get_user_service(db: Session = Depends(get_db)) -> UserService:
+    return UserService(db)
+
+
+def get_role_service(db: Session = Depends(get_db)) -> RoleService:
+    return RoleService(db)
+
+
+def get_session_service() -> SessionService:
+    return SessionService()
 
 
 
@@ -26,7 +37,6 @@ async def require_auth(
 
     token = credentials.credentials
     
-    # Decode and verify token
     payload = decode_token(token)
     if not payload:
         logger.warning("Invalid or expired token in require_auth")
@@ -36,7 +46,6 @@ async def require_auth(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Verify it's an access token
     if payload.get("type") != "access":
         logger.warning("Token provided is not an access token")
         raise HTTPException(
@@ -45,7 +54,6 @@ async def require_auth(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Extract user ID
     user_id_str = payload.get("sub")
     if not user_id_str:
         logger.warning("Token missing user ID")
@@ -65,20 +73,14 @@ async def require_auth(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Try to get user from cache first, then fallback to database
-    session_service = SessionService()
+    session_service = get_session_service()
     cached_user_data = session_service.get_user_data(user_id)
     
     if cached_user_data:
-        # Reconstruct User object from cached data
-        # Note: We still need a User object, but we'll create a minimal one
-        # For full functionality, we still query DB but cache reduces most queries
         logger.debug(f"Found cached user data for user: {user_id}")
-        # Still verify user exists in DB (for security, but cache reduces load)
-        user_service = UserService(db)
+        user_service = get_user_service(db)
         user = user_service.get_user_by_id(user_id)
         if not user:
-            # Cache might be stale, invalidate it
             session_service.invalidate_user_cache(user_id)
             logger.warning(f"User not found in database (cache was stale): {user_id}")
             raise HTTPException(
@@ -88,8 +90,7 @@ async def require_auth(
             )
         return user
     else:
-        # Cache miss - get from database and cache it
-        user_service = UserService(db)
+        user_service = get_user_service(db)
         user = user_service.get_user_by_id(user_id)
         if not user:
             logger.warning(f"User not found for authenticated token: {user_id}")
@@ -99,7 +100,6 @@ async def require_auth(
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        # Cache user data for future requests
         roles = [role.name for role in user.roles]
         session_service.cache_user_data(
             user_id=user.id,

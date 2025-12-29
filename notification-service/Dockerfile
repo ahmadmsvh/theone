@@ -13,5 +13,4 @@ WORKDIR /app/notification-service
 
 EXPOSE 5002
 
-CMD ["python", "main.py"]
-
+CMD ["gunicorn", "main:app", "--host", "0.0.0.0", "--port", "5002", "--workers", "4", "--threads", "2", "--reload"]

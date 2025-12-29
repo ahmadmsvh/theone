@@ -2,16 +2,12 @@ from typing import Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException, status
 
 from app.models import User
 from app.repositories.user_repository import UserRepository
 from app.schemas import UserRegisterRequest, UserResponse
 from app.core.security import hash_password, verify_password
-import sys
-from pathlib import Path
-
-# Add shared to path
+from app.core.exceptions import ConflictError, InternalServerError
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__, "auth-service")
@@ -24,25 +20,22 @@ class UserService:
         self.user_repository = UserRepository(db)
     
     def register_user(self, user_data: UserRegisterRequest) -> User:
-        # Check if email already exists
         if self.user_repository.email_exists(user_data.email):
             logger.warning(f"Registration attempt with existing email: {user_data.email}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
+            raise ConflictError(
+                message="Email already registered",
+                error_code="EMAIL_ALREADY_EXISTS"
             )
         
-        # Hash the password
         try:
             hashed_password = hash_password(user_data.password)
         except Exception as e:
             logger.error(f"Failed to hash password: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to process password"
+            raise InternalServerError(
+                message="Failed to process password",
+                error_code="PASSWORD_HASH_ERROR"
             )
         
-        # Create user
         try:
             new_user = self.user_repository.create(
                 email=user_data.email,
@@ -52,15 +45,15 @@ class UserService:
             return new_user
         except IntegrityError as e:
             logger.error(f"Database integrity error during registration: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
+            raise ConflictError(
+                message="Email already registered",
+                error_code="EMAIL_ALREADY_EXISTS"
             )
         except Exception as e:
             logger.error(f"Unexpected error during user registration: {e}", exc_info=True)
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An error occurred while registering the user"
+            raise InternalServerError(
+                message="An error occurred while registering the user",
+                error_code="USER_REGISTRATION_ERROR"
             )
     
     def get_user_by_id(self, user_id: UUID) -> Optional[User]:

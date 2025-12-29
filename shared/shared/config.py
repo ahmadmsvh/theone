@@ -9,8 +9,7 @@ from dotenv import load_dotenv
 
 
 class DatabaseSettings(BaseSettings):
-    """PostgreSQL database settings"""
-    model_config = SettingsConfigDict(env_prefix="DATABASE_")
+    model_config = SettingsConfigDict(env_prefix="POSTGRES_")
     
     url: str
     pool_size: int
@@ -19,7 +18,6 @@ class DatabaseSettings(BaseSettings):
 
 
 class MongoSettings(BaseSettings):
-    """MongoDB database settings"""
     model_config = SettingsConfigDict(env_prefix="MONGODB_")
     
     url: str
@@ -27,7 +25,6 @@ class MongoSettings(BaseSettings):
 
 
 class RedisSettings(BaseSettings):
-    """Redis cache settings"""
     model_config = SettingsConfigDict(env_prefix="REDIS_")
     
     url: str
@@ -37,7 +34,6 @@ class RedisSettings(BaseSettings):
 
 
 class RabbitMQSettings(BaseSettings):
-    """RabbitMQ message queue settings"""
     model_config = SettingsConfigDict(env_prefix="RABBITMQ_")
     
     url: str
@@ -47,7 +43,6 @@ class RabbitMQSettings(BaseSettings):
 
 
 class AppSettings(BaseSettings):
-    """Application settings"""
     model_config = SettingsConfigDict(env_prefix="")
     
     app_name: str
@@ -57,10 +52,12 @@ class AppSettings(BaseSettings):
     service_name: str 
     json_output: bool
     log_file: str
+    jwt_secret_key: str
+    jwt_algorithm: str
+    access_token_expire_minutes: int
+    refresh_token_expire_days: int
 
 class Settings(BaseSettings):
-    """Main settings class combining all configurations"""
-    # Use .env file from the shared directory (where this config.py file is located)
     _env_file = Path(__file__).parent / ".env"
     load_dotenv(dotenv_path=_env_file)
 
@@ -74,34 +71,30 @@ class Settings(BaseSettings):
     
     @model_validator(mode='after')
     def create_nested_settings(self):
-        """Create nested settings only if required environment variables are present"""
 
         if os.getenv("DATABASE_URL"):
             try:
                 self.database = DatabaseSettings()
             except Exception:
-                pass  # Will be None if required vars are missing
+                pass
         
-        # Create MongoSettings if MONGODB_URL and MONGODB_DATABASE are present
         if os.getenv("MONGODB_URL") and os.getenv("MONGODB_DATABASE"):
             try:
                 self.mongodb = MongoSettings()
             except Exception:
-                pass  # Will be None if required vars are missing
+                pass
         
-        # Create RedisSettings if REDIS_URL is present
         if os.getenv("REDIS_URL"):
             try:
                 self.redis = RedisSettings()
             except Exception:
-                pass  # Will be None if required vars are missing
+                pass
         
-        # Create RabbitMQSettings if RABBITMQ_URL is present
         if os.getenv("RABBITMQ_URL"):
             try:
                 self.rabbitmq = RabbitMQSettings()
             except Exception:
-                pass  # Will be None if required vars are missing
+                pass
         
         return self
 

@@ -1,33 +1,24 @@
 import bcrypt
 import jwt
-import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
-import sys
-from pathlib import Path
 
-from dotenv import load_dotenv
 from shared.logging_config import get_logger
+from shared.config import get_settings
 
+settings = get_settings()
 logger = get_logger(__name__, "auth-service")
 
-# Load .env file from shared directory
-shared_dir = Path(__file__).parent.parent.parent.parent / "shared"/"shared"
-env_path = shared_dir / ".env"
-load_dotenv(dotenv_path=env_path)
-
-# JWT Configuration
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-development")
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
-REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+JWT_SECRET_KEY = settings.app.jwt_secret_key
+JWT_ALGORITHM = settings.app.jwt_algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = int(settings.app.access_token_expire_minutes)
+REFRESH_TOKEN_EXPIRE_DAYS = int(settings.app.refresh_token_expire_days)
 
 
 def hash_password(password: str) -> str:
 
     try:
-        # Generate salt and hash password
-        salt = bcrypt.gensalt(rounds=12)  # 12 rounds is a good balance between security and performance
+        salt = bcrypt.gensalt(rounds=12)
         hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
         return hashed.decode("utf-8")
     except Exception as e:
@@ -52,7 +43,7 @@ def create_access_token(data: Dict[str, Any]) -> str:
 
     try:
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire, "type": "access"})
         encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
         return encoded_jwt
@@ -65,7 +56,7 @@ def create_refresh_token(data: Dict[str, Any]) -> str:
 
     try:
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode.update({"exp": expire, "type": "refresh"})
         encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
         return encoded_jwt

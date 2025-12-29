@@ -13,5 +13,6 @@ WORKDIR /app/product-service
 
 EXPOSE 5001
 
-CMD ["python", "main.py"]
+CMD ["gunicorn", "main:app", "--host", "0.0.0.0", "--port", "5001", "--workers", "4", "--threads", "2", "--reload"]
+
 

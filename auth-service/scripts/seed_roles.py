@@ -1,13 +1,11 @@
 import sys
 from pathlib import Path
 
-# Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root / "shared"))
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.core.database import DatabaseManager
-from app.models import Role, Base
+from app.core.database import DatabaseManager                       
 from app.repositories.role_repository import RoleRepository
 from shared.logging_config import get_logger
 
@@ -15,7 +13,6 @@ logger = get_logger(__name__, "auth-service")
 
 
 def seed_roles():
-    """Seed initial roles into the database"""
     db_manager = DatabaseManager()
     db_manager.create_engine()
     db_manager.create_session_factory()
@@ -26,7 +23,6 @@ def seed_roles():
     try:
         role_repo = RoleRepository(db)
         
-        # Define initial roles
         initial_roles = [
             {"name": "Customer", "description": "Default customer role"},
             {"name": "Vendor", "description": "Vendor role for sellers"},
@@ -37,14 +33,12 @@ def seed_roles():
         skipped_count = 0
         
         for role_data in initial_roles:
-            # Check if role already exists
             existing_role = role_repo.get_by_name(role_data["name"])
             if existing_role:
                 logger.info(f"Role '{role_data['name']}' already exists, skipping...")
                 skipped_count += 1
                 continue
             
-            # Create role
             try:
                 role_repo.create(
                     name=role_data["name"],

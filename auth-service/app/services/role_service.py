@@ -1,24 +1,24 @@
-from typing import Optional, List
+from typing import Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException, status
 
 from app.models import Role, User
 from app.repositories.role_repository import RoleRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas import RoleCreateRequest, RoleResponse
-import sys
-from pathlib import Path
-
-
+from app.core.exceptions import (
+    NotFoundError,
+    ConflictError,
+    ValidationError,
+    InternalServerError
+)
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__, "auth-service")
 
 
 class RoleService:
-    """Service for role business logic"""
     
     def __init__(self, db: Session):
 
@@ -28,12 +28,11 @@ class RoleService:
     
     def create_role(self, role_data: RoleCreateRequest) -> Role:
 
-        # Check if role name already exists
         if self.role_repository.get_by_name(role_data.name):
             logger.warning(f"Role creation attempt with existing name: {role_data.name}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Role with name '{role_data.name}' already exists"
+            raise ConflictError(
+                message=f"Role with name '{role_data.name}' already exists",
+                error_code="ROLE_ALREADY_EXISTS"
             )
         
         try:
@@ -45,15 +44,15 @@ class RoleService:
             return new_role
         except IntegrityError as e:
             logger.error(f"Database integrity error during role creation: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Role with name '{role_data.name}' already exists"
+            raise ConflictError(
+                message=f"Role with name '{role_data.name}' already exists",
+                error_code="ROLE_ALREADY_EXISTS"
             )
         except Exception as e:
             logger.error(f"Unexpected error during role creation: {e}", exc_info=True)
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An error occurred while creating the role"
+            raise InternalServerError(
+                message="An error occurred while creating the role",
+                error_code="ROLE_CREATION_ERROR"
             )
     
     def get_role_by_id(self, role_id: int) -> Optional[Role]:
@@ -64,7 +63,7 @@ class RoleService:
 
         return self.role_repository.get_by_name(name)
     
-    def get_all_roles(self) -> List[Role]:
+    def get_all_roles(self) -> list[Role]:
 
         return self.role_repository.get_all()
     
@@ -73,87 +72,78 @@ class RoleService:
         user = self.user_repository.get_by_id(user_id)
         if not user:
             logger.warning(f"User not found: {user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+            raise NotFoundError(
+                message="User not found",
+                error_code="USER_NOT_FOUND"
             )
         
-        # Verify role exists
         role = self.role_repository.get_by_id(role_id)
         if not role:
             logger.warning(f"Role not found: {role_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Role not found"
+            raise NotFoundError(
+                message="Role not found",
+                error_code="ROLE_NOT_FOUND"
             )
         
-        # Check if role is already assigned
-        user_roles = self.role_repository.get_user_roles(str(user_id))
+        user_roles = self.role_repository.get_user_roles(user_id)
         if role in user_roles:
             logger.warning(f"Role {role_id} already assigned to user {user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Role '{role.name}' is already assigned to this user"
+            raise ConflictError(
+                message=f"Role '{role.name}' is already assigned to this user",
+                error_code="ROLE_ALREADY_ASSIGNED"
             )
         
-        # Assign role
         try:
-            self.role_repository.assign_role_to_user(str(user_id), role_id)
-            # Refresh user to get updated roles
+            self.role_repository.assign_role_to_user(user_id, role_id)
             self.db.refresh(user)
             logger.info(f"Role {role_id} assigned to user {user_id}")
             return user
         except IntegrityError as e:
             logger.error(f"Database integrity error during role assignment: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to assign role"
+            raise ValidationError(
+                message="Failed to assign role",
+                error_code="ROLE_ASSIGNMENT_ERROR"
             )
         except Exception as e:
             logger.error(f"Unexpected error during role assignment: {e}", exc_info=True)
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An error occurred while assigning the role"
+            raise InternalServerError(
+                message="An error occurred while assigning the role",
+                error_code="ROLE_ASSIGNMENT_ERROR"
             )
     
     def remove_role_from_user(self, user_id: UUID, role_id: int) -> User:
 
-        # Verify user exists
         user = self.user_repository.get_by_id(user_id)
         if not user:
             logger.warning(f"User not found: {user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+            raise NotFoundError(
+                message="User not found",
+                error_code="USER_NOT_FOUND"
             )
         
-        # Verify role exists
         role = self.role_repository.get_by_id(role_id)
         if not role:
             logger.warning(f"Role not found: {role_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Role not found"
+            raise NotFoundError(
+                message="Role not found",
+                error_code="ROLE_NOT_FOUND"
             )
         
-        # Check if role is assigned
         user_roles = self.role_repository.get_user_roles(user_id)
         if role not in user_roles:
             logger.warning(f"Role {role_id} not assigned to user {user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Role '{role.name}' is not assigned to this user"
+            raise ValidationError(
+                message=f"Role '{role.name}' is not assigned to this user",
+                error_code="ROLE_NOT_ASSIGNED"
             )
         
-        # Remove role
         removed = self.role_repository.remove_role_from_user(user_id, role_id)
         if not removed:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to remove role"
+            raise InternalServerError(
+                message="Failed to remove role",
+                error_code="ROLE_REMOVAL_ERROR"
             )
         
-        # Refresh user to get updated roles
         self.db.refresh(user)
         logger.info(f"Role {role_id} removed from user {user_id}")
         return user
