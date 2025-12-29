@@ -1,0 +1,9 @@
+2025-12-29 01:27:50 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-29 01:27:50 - app.services.user_service - INFO - User authenticated successfully: user@example.com (ID: 2e69696c-c279-4fa5-ba90-5210dc2fb1c2)
+2025-12-29 01:27:50 - app.core.database - DEBUG - Connection returned to pool
+2025-12-29 01:27:50 - app.core.database - DEBUG - Connection checked out from pool
+2025-12-29 01:27:50 - app.repositories.refresh_token_repository - INFO - Refresh token created for user: 2e69696c-c279-4fa5-ba90-5210dc2fb1c2
+2025-12-29 01:27:50 - shared.database - INFO - Redis connection established successfully
+2025-12-29 01:27:50 - app.services.session_service - DEBUG - Cached user data for user: 2e69696c-c279-4fa5-ba90-5210dc2fb1c2
+2025-12-29 01:27:50 - app.api.v1.auth - INFO - User logged in successfully: user@example.com (ID: 2e69696c-c279-4fa5-ba90-5210dc2fb1c2)
+2025-12-29 01:27:50 - app.core.database - DEBUG - Connection returned to pool

@@ -1,2 +1,12 @@
 2025-12-29 01:27:24 - aiormq.connection - DEBUG - Received frame <pamqp.heartbeat.Heartbeat object at 0x72a0d807b410> in channel #0 weight=8 on <Connection: "amqp://admin:******@rabbitmq:5672/" at 0x72a0d99ef520>
 2025-12-29 01:27:24 - aiormq.connection - DEBUG - Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-12-29 01:27:53 - asyncio - DEBUG - Using selector: EpollSelector
+2025-12-29 01:27:53 - shared.database - INFO - MongoDB async connection established to database: theone_db
+2025-12-29 01:27:53 - werkzeug - INFO - 172.18.0.1 - - [29/Dec/2025 01:27:53] "GET /api/v1/products/694f5b26444fbc282ac03b3e HTTP/1.1" 200 -
+2025-12-29 01:27:54 - werkzeug - INFO - 172.18.0.1 - - [29/Dec/2025 01:27:54] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-12-29 01:27:54 - aiormq.connection - DEBUG - Received frame <pamqp.heartbeat.Heartbeat object at 0x72a0dca45a50> in channel #0 weight=8 on <Connection: "amqp://admin:******@rabbitmq:5672/" at 0x72a0d99ef520>
+2025-12-29 01:27:54 - aiormq.connection - DEBUG - Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-12-29 01:28:24 - aiormq.connection - DEBUG - Received frame <pamqp.heartbeat.Heartbeat object at 0x72a0da984e90> in channel #0 weight=8 on <Connection: "amqp://admin:******@rabbitmq:5672/" at 0x72a0d99ef520>
+2025-12-29 01:28:24 - aiormq.connection - DEBUG - Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-12-29 01:28:54 - aiormq.connection - DEBUG - Received frame <pamqp.heartbeat.Heartbeat object at 0x72a0d80865d0> in channel #0 weight=8 on <Connection: "amqp://admin:******@rabbitmq:5672/" at 0x72a0d99ef520>
+2025-12-29 01:28:54 - aiormq.connection - DEBUG - Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
