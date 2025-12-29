@@ -1,0 +1,8 @@
+# Cron job to clean old logs daily at 11:59 PM
+# This runs the log cleanup script every day
+# Set PATH and environment for cron
+PATH=/usr/local/bin:/usr/bin:/bin
+SHELL=/bin/bash
+# Run cleanup script daily at 11:59 PM
+59 23 * * * /app/product-service/scripts/cleanup_logs.sh
+
