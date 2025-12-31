@@ -1,0 +1,97 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Debug Auth Service",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/auth-service",
+          "remoteRoot": "/app/auth-service"
+        },
+        {
+          "localRoot": "${workspaceFolder}/shared",
+          "remoteRoot": "/app/shared"
+        }
+      ],
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Debug Product Service",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5679
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/product-service",
+          "remoteRoot": "/app/product-service"
+        },
+        {
+          "localRoot": "${workspaceFolder}/shared",
+          "remoteRoot": "/app/shared"
+        }
+      ],
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Debug Order Service",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5680
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/order-service",
+          "remoteRoot": "/app/order-service"
+        },
+        {
+          "localRoot": "${workspaceFolder}/shared",
+          "remoteRoot": "/app/shared"
+        }
+      ],
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Debug Notification Service",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5681
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/notification-service",
+          "remoteRoot": "/app/notification-service"
+        },
+        {
+          "localRoot": "${workspaceFolder}/shared",
+          "remoteRoot": "/app/shared"
+        }
+      ],
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/auth-service:${workspaceFolder}/shared"
+      }
+    }
+  ]
+}
+

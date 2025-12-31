@@ -1,10 +1,7 @@
 {
-  "name": "TheOne - Auth Service (Default)",
-  "dockerComposeFile": "../docker-compose.dev.yml",
-  // "service": "auth-service",
-  "service": "product-service",
-  // "service": "order-service",
-  // "service": "notification-service",
+  "name": "TheOne - Auth Service",
+  "dockerComposeFile": "../../docker-compose.dev.yml",
+  "service": "auth-service",
   "workspaceFolder": "/workspace",
   "shutdownAction": "stopCompose",
   
@@ -70,5 +67,4 @@
   "postCreateCommand": "pip install debugpy",
   "remoteUser": "root"
 }
-
 

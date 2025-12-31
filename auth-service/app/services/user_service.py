@@ -26,7 +26,6 @@ class UserService:
                 message="Email already registered",
                 error_code="EMAIL_ALREADY_EXISTS"
             )
-        
         try:
             hashed_password = hash_password(user_data.password)
         except Exception as e:

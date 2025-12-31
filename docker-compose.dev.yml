@@ -158,7 +158,7 @@ services:
     command: >
       sh -c "
         pip install debugpy &&
-        python -m debugpy --listen 0.0.0.0:5681 --wait-for-client -m flask run --host 0.0.0.0 --port 5002 --reload --debugger
+        python -m debugpy --listen 0.0.0.0:5681 main.py
       "
 
   product-service:
@@ -199,7 +199,7 @@ services:
     command: >
       sh -c "
         pip install debugpy &&
-        python -m debugpy --listen 0.0.0.0:5679 --wait-for-client -m flask run --host 0.0.0.0 --port 5001 --reload --debugger
+        python -m debugpy --listen 0.0.0.0:5679 main.py
       "
 
   order-service:
