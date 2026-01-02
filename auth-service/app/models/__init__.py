@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
-from typing import Optional
-from uuid import UUID, uuid4
+from uuid import  uuid4
 from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship, declarative_base
@@ -10,7 +9,6 @@ Base = declarative_base()
 
 
 class User(Base):
-    """User model"""
     __tablename__ = "users"
     
     id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -18,8 +16,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    
-    # Relationships
+
     roles = relationship("Role", secondary="user_roles", back_populates="users")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     
@@ -28,7 +25,6 @@ class User(Base):
 
 
 class Role(Base):
-    """Role model"""
     __tablename__ = "roles"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -36,7 +32,6 @@ class Role(Base):
     description = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
-    # Relationships
     users = relationship("User", secondary="user_roles", back_populates="roles")
     
     def __repr__(self):
@@ -44,7 +39,6 @@ class Role(Base):
 
 
 class UserRole(Base):
-    """User-Role junction table"""
     __tablename__ = "user_roles"
     
     user_id = Column(PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
@@ -56,7 +50,6 @@ class UserRole(Base):
 
 
 class RefreshToken(Base):
-    """Refresh token model"""
     __tablename__ = "refresh_tokens"
     
     token = Column(Text, primary_key=True)
@@ -65,22 +58,17 @@ class RefreshToken(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     revoked = Column(Boolean, default=False, index=True)
     
-    # Relationships
     user = relationship("User", back_populates="refresh_tokens")
     
     def __repr__(self):
         return f"<RefreshToken(token={self.token[:10]}..., user_id={self.user_id}, expires_at={self.expires_at})>"
     
     def is_expired(self) -> bool:
-        """Check if token is expired"""
         now = datetime.now(timezone.utc)
-        # Normalize expires_at to timezone-aware (SQLite may return naive datetimes)
         expires_at = self.expires_at
         if expires_at.tzinfo is None:
-            # Assume UTC if timezone-naive (common with SQLite)
             expires_at = expires_at.replace(tzinfo=timezone.utc)
         return now >= expires_at
     
     def is_valid(self) -> bool:
-        """Check if token is valid (not expired and not revoked)"""
         return not self.revoked and not self.is_expired()
