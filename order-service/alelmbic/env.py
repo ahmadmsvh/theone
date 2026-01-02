@@ -3,32 +3,34 @@ import os
 import sys
 from pathlib import Path
 
-from sqlalchemy import engine_from_config, create_engine
+from sqlalchemy import create_engine
 from sqlalchemy import pool
 
 from alembic import context
 
-# Add shared to path
+# Add shared to path (needed for Docker container structure: /app/shared)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
-# Add app to path
+# Add app to path (current directory structure: /app/order-service)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.models import Base
+
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
 # Get database URL from environment variable or use default
-database_url = os.getenv("DATABASE_AUTH_URL")
+database_url = os.getenv("DATABASE_ORDER_URL")
 if not database_url:
     # Try to get from shared config as fallback
     try:
         from shared.config import get_settings
         settings = get_settings()
-        database_url = settings.authDatabase.url
+        database_url = settings.orderDatabase.url
     except Exception:
         # Final fallback
-        database_url = "postgresql://postgres:postgres@postgres:5432/theone_auth_db"
+        database_url = "postgresql://postgres:postgres@localhost:5432/theone_db"
 
 # Set the sqlalchemy.url in the config
 config.set_main_option("sqlalchemy.url", database_url)
@@ -42,15 +44,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-# target_metadata = None
 target_metadata = Base.metadata
-
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
-
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

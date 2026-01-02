@@ -22,7 +22,7 @@ class DatabaseManager:
     
     def __init__(self, database_url: Optional[str] = None):
         self.settings = get_settings()
-        self.database_url = database_url or self.settings.authDatabase.url
+        self.database_url = database_url or self.settings.orderDatabase.url
         self._engine: Optional[Engine] = None
         self._session_factory: Optional[sessionmaker] = None
     
@@ -33,9 +33,9 @@ class DatabaseManager:
                 self._engine = create_engine(
                     self.database_url,
                     poolclass=QueuePool,
-                    pool_size=self.settings.authDatabase.pool_size,
-                    max_overflow=self.settings.authDatabase.max_overflow,
-                    pool_timeout=self.settings.authDatabase.pool_timeout,
+                    pool_size=self.settings.orderDatabase.pool_size,
+                    max_overflow=self.settings.orderDatabase.max_overflow,
+                    pool_timeout=self.settings.orderDatabase.pool_timeout,
                     pool_pre_ping=True,  # Verify connections before using
                     pool_recycle=3600,  # Recycle connections after 1 hour
                     echo=False,  # Set to True for SQL query logging
@@ -58,8 +58,8 @@ class DatabaseManager:
                     logger.debug("Connection returned to pool")
                 
                 logger.info(
-                    f"Database engine created with pool_size={self.settings.authDatabase.pool_size}, "
-                    f"max_overflow={self.settings.authDatabase.max_overflow}"
+                    f"Database engine created with pool_size={self.settings.orderDatabase.pool_size}, "
+                    f"max_overflow={self.settings.orderDatabase.max_overflow}"
                 )
             except Exception as e:
                 logger.error(f"Failed to create database engine: {e}")
@@ -99,7 +99,7 @@ class DatabaseManager:
     
     @contextmanager
     def get_session_context(self):
-
+        """Context manager for database sessions"""
         session = self.get_session()
         try:
             yield session
@@ -112,7 +112,7 @@ class DatabaseManager:
             session.close()
     
     def health_check(self) -> bool:
-
+        """Check database connection health"""
         try:
             with self.engine.connect() as conn:
                 result = conn.execute(text("SELECT 1"))
@@ -124,7 +124,7 @@ class DatabaseManager:
             return False
     
     def get_pool_status(self) -> dict:
-
+        """Get connection pool status"""
         pool = self.engine.pool
         return {
             "size": pool.size(),
@@ -174,7 +174,7 @@ def get_db_manager() -> DatabaseManager:
 
 
 def get_db() -> Generator[Session, None, None]:
-
+    """Dependency for FastAPI to get database session"""
     db_manager = get_db_manager()
     session = db_manager.get_session()
     try:
@@ -212,3 +212,4 @@ def init_db():
 def drop_db():
     """Drop all tables - use with caution! (for backward compatibility)"""
     db_manager.drop_db()
+

@@ -6,11 +6,12 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: theone_db
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-postgres-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
     networks:
       - theone-network
     healthcheck:
@@ -19,6 +20,26 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  # postgres-order:
+  #   image: postgres:15-alpine
+  #   container_name: postgres-order
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: theone_order_db
+  #   ports:
+  #     - "5433:5432"
+  #   volumes:
+  #     - postgres_data_order:/var/lib/postgresql/data
+  #   networks:
+  #     - theone-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -101,7 +122,7 @@ services:
       - "8001:8001"
     environment:
       - SERVICE_NAME=auth-service 
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_db
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_auth_db
       - REDIS_URL=redis://redis:6379
     depends_on:
       postgres:
@@ -174,7 +195,7 @@ services:
       - "8002:8002"
     environment:
       - SERVICE_NAME=order-service
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_db
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_order_db
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       - REDIS_URL=redis://redis:6379
     depends_on:
@@ -211,6 +232,7 @@ services:
 
 volumes:
   postgres_data:
+  postgres_data_order:
   mongodb_data:
   redis_data:
   rabbitmq_data:

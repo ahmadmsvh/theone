@@ -8,14 +8,21 @@ from dotenv import load_dotenv
 
 
 
-class DatabaseSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="POSTGRES_")
+class AuthDatabaseSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="POSTGRES_AUTH_")
     
     url: str
     pool_size: int
     max_overflow: int
     pool_timeout: int
 
+class OrderDatabaseSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="POSTGRES_ORDER_")
+    
+    url: str
+    pool_size: int
+    max_overflow: int
+    pool_timeout: int
 
 class MongoSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="MONGODB_")
@@ -59,7 +66,8 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict()
     
-    database: Optional[DatabaseSettings] = None
+    authDatabase: Optional[AuthDatabaseSettings] = None
+    orderDatabase: Optional[OrderDatabaseSettings] = None
     mongodb: Optional[MongoSettings] = None
     redis: Optional[RedisSettings] = None
     rabbitmq: Optional[RabbitMQSettings] = None
@@ -68,9 +76,15 @@ class Settings(BaseSettings):
     @model_validator(mode='after')
     def create_nested_settings(self):
 
-        if os.getenv("DATABASE_URL"):
+        if os.getenv("POSTGRES_AUTH_URL"):
             try:
-                self.database = DatabaseSettings()
+                self.authDatabase = AuthDatabaseSettings()
+            except Exception:
+                pass
+        
+        if os.getenv("POSTGRES_ORDER_URL"):
+            try:
+                self.orderDatabase = OrderDatabaseSettings()
             except Exception:
                 pass
         
