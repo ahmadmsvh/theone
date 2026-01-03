@@ -147,6 +147,40 @@ class ProductServiceClient:
             logger.error(f"Unexpected error reserving inventory for product {product_id}: {e}")
             raise
     
+    async def release_inventory(
+        self,
+        product_id: str,
+        quantity: int,
+        order_id: str,
+        token: str
+    ) -> Dict[str, Any]:
+        try:
+            response = await self._request_with_retry(
+                "POST",
+                f"/api/v1/products/{product_id}/inventory/release",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "quantity": quantity,
+                    "order_id": order_id
+                }
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                raise ValueError(f"Product {product_id} not found")
+            elif e.response.status_code == 400:
+                error_detail = e.response.json().get("error", "Invalid request")
+                raise ValueError(error_detail)
+            logger.error(f"Error releasing inventory for product {product_id}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error releasing inventory for product {product_id}: {e}")
+            raise
+    
     async def validate_cart_items(
         self,
         cart_items: List[Dict[str, Any]],

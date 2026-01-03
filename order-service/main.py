@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from app.api.v1 import orders
 from app.core.database import init_db
 from app.core.product_client import close_product_client
+from app.core.event_consumer import start_event_consumer, stop_event_consumer
 from shared.logging_config import setup_logging, get_logger
 from shared.config import get_settings
 
@@ -20,6 +21,14 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         logger.info("Database initialized")
+        
+        # Start event consumer for inventory events
+        try:
+            await start_event_consumer()
+            logger.info("Event consumer started")
+        except Exception as e:
+            logger.error(f"Error starting event consumer: {e}", exc_info=True)
+            # Don't fail startup if event consumer fails - service can still function
     except Exception as e:
         logger.error(f"Error initializing database: {e}")
         raise
@@ -27,6 +36,12 @@ async def lifespan(app: FastAPI):
     yield
     
     logger.info("Shutting down order-service...")
+    try:
+        await stop_event_consumer()
+        logger.info("Event consumer stopped")
+    except Exception as e:
+        logger.error(f"Error stopping event consumer: {e}", exc_info=True)
+    
     await close_product_client()
     logger.info("Order service shut down complete")
 

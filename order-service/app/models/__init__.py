@@ -10,7 +10,9 @@ Base = declarative_base()
 
 class OrderStatus(str, enum.Enum):
     PENDING = "pending"
+    CONFIRMED = "confirmed"
     PROCESSING = "processing"
+    PAID = "paid"
     SHIPPED = "shipped"
     DELIVERED = "delivered"
     CANCELLED = "cancelled"
@@ -60,4 +62,23 @@ class OrderStatusHistory(Base):
     
     def __repr__(self):
         return f"<OrderStatusHistory(order_id={self.order_id}, status={self.status}, timestamp={self.timestamp})>"
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+    
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    order_id = Column(PGUUID(as_uuid=True), ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True)
+    idempotency_key = Column(String(255), unique=True, nullable=False, index=True)
+    amount = Column(Numeric(10, 2), nullable=False)
+    status = Column(String(50), nullable=False, default="pending")  # pending, succeeded, failed
+    payment_method = Column(String(50), nullable=True)  # card, stripe, mock, etc.
+    transaction_id = Column(String(255), nullable=True, unique=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    order = relationship("Order", backref="payments")
+    
+    def __repr__(self):
+        return f"<Payment(id={self.id}, order_id={self.order_id}, idempotency_key={self.idempotency_key}, status={self.status})>"
 
