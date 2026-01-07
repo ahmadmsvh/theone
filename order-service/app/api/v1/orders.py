@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from uuid import UUID
 import os
 from app.core.database import get_db
@@ -27,7 +26,6 @@ from shared.logging_config import get_logger
 logger = get_logger(__name__, os.getenv("SERVICE_NAME"))
 
 router = APIRouter(prefix="/api/v1/orders", tags=["orders"])
-security = HTTPBearer()
 
 
 def get_order_repository(db: Session = Depends(get_db)) -> OrderRepository:
@@ -56,7 +54,6 @@ def get_order_service(
 async def create_order(
     order_data: OrderCreateRequest,
     request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(security),
     current_user: Dict[str, Any] = Depends(require_auth),
     _: None = Depends(require_role("Customer")),
     order_service: OrderService = Depends(get_order_service),
@@ -65,7 +62,9 @@ async def create_order(
 
     try:
         user_id = current_user["user_id"]
-        token = credentials.credentials
+        # Extract token from Authorization header for service-to-service calls
+        auth_header = request.headers.get("Authorization", "")
+        token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
         
         cart_items = [
             {"product_id": item.product_id, "quantity": item.quantity} for item in order_data.items if item.product_id and item.quantity
@@ -419,12 +418,9 @@ async def process_payment(
                 detail="Access denied. You can only pay for your own orders."
             )
         
-        # Extract token from request headers for inventory rollback if needed
-        token = None
-        if hasattr(request, 'headers') and 'authorization' in request.headers:
-            auth_header = request.headers.get('authorization', '')
-            if auth_header.startswith('Bearer '):
-                token = auth_header[7:]  # Remove 'Bearer ' prefix
+        # Extract token from Authorization header for service-to-service calls
+        auth_header = request.headers.get("Authorization", "")
+        token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
         
         # Process payment
         payment_result = await order_service.process_payment(

@@ -1,61 +1,48 @@
 from uuid import UUID
 from typing import Dict, Any
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status, Request
 
-from app.core.security import decode_token
 from shared.logging_config import get_logger
 
 logger = get_logger(__name__, "order-service")
 
-security = HTTPBearer()
 
-
-async def require_auth(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> Dict[str, Any]:
-    token = credentials.credentials
+async def require_auth(request: Request) -> Dict[str, Any]:
+    """
+    Extract user information from headers set by nginx auth_request module.
+    Nginx validates tokens and sets X-User-Id, X-User-Email, and X-User-Roles headers.
+    """
+    user_id_header = request.headers.get("X-User-Id")
+    user_email_header = request.headers.get("X-User-Email", "")
+    user_roles_header = request.headers.get("X-User-Roles", "")
     
-    payload = decode_token(token)
-    if not payload:
-        logger.warning("Invalid or expired token in require_auth")
+    if not user_id_header:
+        # If headers are missing, it means nginx didn't validate the token
+        # This should not happen if nginx is configured correctly
+        logger.warning("Missing X-User-Id header - request may have bypassed nginx auth")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    if payload.get("type") != "access":
-        logger.warning("Token provided is not an access token")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    user_id_str = payload.get("sub")
-    if not user_id_str:
-        logger.warning("Token missing user ID")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload",
+            detail="Authentication required",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
     try:
-        user_id = UUID(user_id_str)
+        user_id = UUID(user_id_header)
     except ValueError:
-        logger.warning(f"Invalid user ID format in token: {user_id_str}")
+        logger.warning(f"Invalid user ID format in header: {user_id_header}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload",
+            detail="Invalid user information",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # Parse roles from comma-separated string
+    roles = [role.strip() for role in user_roles_header.split(",") if role.strip()] if user_roles_header else []
+    
     return {
         "user_id": user_id,
-        "email": payload.get("email"),
-        "roles": payload.get("roles", [])
+        "email": user_email_header,
+        "roles": roles
     }
 
 

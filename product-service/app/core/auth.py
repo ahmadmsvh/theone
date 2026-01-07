@@ -1,8 +1,8 @@
 """
-Authentication utilities for validating JWT tokens from auth-service
+Authentication utilities for reading user information from nginx gateway headers.
+Nginx validates tokens and sets X-User-Id, X-User-Email, and X-User-Roles headers.
 """
 import os
-import jwt
 from functools import wraps
 from typing import Optional, Dict, Any, List
 from flask import request, jsonify
@@ -13,64 +13,33 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "shared"))
 
 from shared.logging_config import get_logger
-from shared.config import get_settings
 
 logger = get_logger(__name__, os.getenv("SERVICE_NAME", "product-service"))
 
-# Get JWT configuration from shared config (matches auth-service)
-settings = get_settings()
-JWT_SECRET_KEY = settings.app.jwt_secret_key
-JWT_ALGORITHM = settings.app.jwt_algorithm
-
-
-def decode_token(token: str) -> Optional[Dict[str, Any]]:
-    try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        logger.warning("Token has expired")
-        return None
-    except jwt.InvalidTokenError as e:
-        logger.warning(f"Invalid token: {e}")
-        return None
-    except Exception as e:
-        logger.error(f"Error decoding token: {e}")
-        return None
-
 
 def get_current_user() -> Optional[Dict[str, Any]]:
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        logger.debug("No Authorization header found")
+    """
+    Extract user information from headers set by nginx auth_request module.
+    Nginx validates tokens and sets X-User-Id, X-User-Email, and X-User-Roles headers.
+    """
+    user_id = request.headers.get("X-User-Id")
+    user_email = request.headers.get("X-User-Email", "")
+    user_roles_str = request.headers.get("X-User-Roles", "")
+    
+    if not user_id:
+        # If headers are missing, it means nginx didn't validate the token
+        # This should not happen if nginx is configured correctly
+        logger.warning("Missing X-User-Id header - request may have bypassed nginx auth")
         return None
     
-    try:
-        # Extract Bearer token
-        scheme, token = auth_header.split(" ", 1)
-        if scheme.lower() != "bearer":
-            logger.warning(f"Invalid authorization scheme: {scheme}")
-            return None
-    except ValueError:
-        logger.warning("Malformed Authorization header")
-        return None
+    # Parse roles from comma-separated string
+    roles = [role.strip() for role in user_roles_str.split(",") if role.strip()] if user_roles_str else []
     
-    # Decode token
-    payload = decode_token(token)
-    if not payload:
-        logger.warning("Failed to decode token")
-        return None
-    
-    # Verify it's an access token
-    if payload.get("type") != "access":
-        logger.warning(f"Invalid token type: {payload.get('type')}. Expected 'access' token.")
-        return None
-    
-    # Verify required fields
-    if not payload.get("sub"):
-        logger.warning("Token missing user ID (sub)")
-        return None
-    
-    return payload
+    return {
+        "sub": user_id,
+        "email": user_email,
+        "roles": roles
+    }
 
 
 def require_auth(f):

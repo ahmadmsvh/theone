@@ -1,5 +1,5 @@
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from starlette.responses import HTMLResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -44,10 +44,13 @@ async def custom_swagger_ui_html():
     ) 
 
 @app.get("/custom-docs", include_in_schema=False)
-async def dark_swagger_ui_html():
+async def dark_swagger_ui_html(request: Request):
     """
     Custom dark theme Swagger UI with inline CSS
     """
+    # Determine the correct OpenAPI URL dynamically using JavaScript
+    # This handles both direct access and access through nginx gateway
+    
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -90,8 +93,17 @@ async def dark_swagger_ui_html():
         <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui-bundle.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui-standalone-preset.js"></script>
         <script>
+            // Dynamically determine the OpenAPI URL based on the current path
+            const currentPath = window.location.pathname;
+            let openapiUrl = '/openapi.json';
+            
+            // If accessed through nginx gateway at /auth/custom-docs, use /auth/openapi.json
+            if (currentPath.includes('/auth/custom-docs')) {{
+                openapiUrl = '/auth/openapi.json';
+            }}
+            
             const ui = SwaggerUIBundle({{
-                url: '{app.openapi_url}',
+                url: openapiUrl,
                 dom_id: '#swagger-ui',
                 presets: [
                     SwaggerUIBundle.presets.apis,

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request, Header
 from sqlalchemy.orm import Session
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 from app.core.database import get_db
 from app.core.security import create_access_token, create_refresh_token, decode_token, REFRESH_TOKEN_EXPIRE_DAYS
@@ -300,3 +301,113 @@ def logout(
         return LogoutResponse(
             message="Logout successful"
         )
+
+
+@router.get(
+    "/verify",
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Token is valid"},
+        401: {"description": "Invalid or expired token"}
+    }
+)
+def verify_token(
+    request: Request,
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db),
+    session_service: SessionService = Depends(get_session_service)
+):
+    """
+    Verify token endpoint for nginx auth_request module.
+    Returns 200 if token is valid, 401 otherwise.
+    Sets custom headers with user information for nginx to pass to backend services.
+    """
+    # Get Authorization header (nginx passes it as is)
+    auth_header = authorization or request.headers.get("Authorization")
+    
+    if not auth_header:
+        logger.debug("No Authorization header in verify request")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Authorization header"
+        )
+    
+    try:
+        # Extract Bearer token
+        scheme, token = auth_header.split(" ", 1)
+        if scheme.lower() != "bearer":
+            logger.warning(f"Invalid authorization scheme in verify: {scheme}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authorization scheme"
+            )
+    except ValueError:
+        logger.warning("Malformed Authorization header in verify request")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Malformed Authorization header"
+        )
+    
+    # Decode and validate token
+    payload = decode_token(token)
+    if not payload:
+        logger.warning("Invalid or expired token in verify request")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    
+    # Verify it's an access token
+    if payload.get("type") != "access":
+        logger.warning(f"Invalid token type in verify: {payload.get('type')}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type"
+        )
+    
+    user_id = payload.get("sub")
+    user_email = payload.get("email")
+    user_roles = payload.get("roles", [])
+    
+    if not user_id:
+        logger.warning("Token missing user ID in verify request")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+    
+    # Get user data from cache or database
+    try:
+        user_uuid = UUID(user_id)
+        cached_user_data = session_service.get_user_data(user_uuid)
+        
+        if cached_user_data:
+            user_email = cached_user_data.get("email", user_email)
+            user_roles = cached_user_data.get("roles", user_roles)
+    except ValueError:
+        logger.warning(f"Invalid user ID format in verify: {user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+    
+    # Check if token is blacklisted
+    if session_service.is_blacklisted(token):
+        logger.warning(f"Blacklisted token attempted in verify: {user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked"
+        )
+    
+    # Return success - nginx will read custom headers from response
+    from fastapi.responses import Response
+    response = Response(status_code=status.HTTP_200_OK)
+    
+    # Set custom headers that nginx can read and pass to backend services
+    response.headers["X-User-Id"] = user_id
+    response.headers["X-User-Email"] = user_email or ""
+    response.headers["X-User-Roles"] = ",".join(user_roles) if user_roles else ""
+    
+    logger.debug(f"Token verified successfully for user: {user_email} (ID: {user_id})")
+    
+    return response
