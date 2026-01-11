@@ -6,7 +6,6 @@ from flask import request, jsonify
 import sys
 from pathlib import Path
 
-# Add shared to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "shared"))
 
 from shared.logging_config import get_logger
@@ -14,7 +13,6 @@ from shared.config import get_settings
 
 logger = get_logger(__name__, os.getenv("SERVICE_NAME", "product-service"))
 
-# Get JWT configuration from shared config (matches auth-service)
 settings = get_settings()
 JWT_SECRET_KEY = settings.app.jwt_secret_key
 JWT_ALGORITHM = settings.app.jwt_algorithm
@@ -42,7 +40,6 @@ def get_current_user() -> Optional[Dict[str, Any]]:
         return None
     
     try:
-        # Extract Bearer token
         scheme, token = auth_header.split(" ", 1)
         if scheme.lower() != "bearer":
             logger.warning(f"Invalid authorization scheme: {scheme}")
@@ -51,18 +48,15 @@ def get_current_user() -> Optional[Dict[str, Any]]:
         logger.warning("Malformed Authorization header")
         return None
     
-    # Decode token
     payload = decode_token(token)
     if not payload:
         logger.warning("Failed to decode token")
         return None
     
-    # Verify it's an access token
     if payload.get("type") != "access":
         logger.warning(f"Invalid token type: {payload.get('type')}. Expected 'access' token.")
         return None
     
-    # Verify required fields
     if not payload.get("sub"):
         logger.warning("Token missing user ID (sub)")
         return None
@@ -83,11 +77,8 @@ def require_auth(f):
             response.headers["WWW-Authenticate"] = "Bearer"
             return response, 401
         
-        # Add user data to kwargs for use in route
         kwargs["current_user"] = user_data
         logger.debug(f"Authenticated user: {user_data.get('sub')} (roles: {user_data.get('roles', [])})")
-        # Return the function call (may be coroutine if async)
-        # The async_route decorator will handle execution
         return f(*args, **kwargs)
     
     return decorated_function
