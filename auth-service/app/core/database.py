@@ -32,12 +32,11 @@ class DatabaseManager:
                     pool_size=self.settings.authDatabase.pool_size,
                     max_overflow=self.settings.authDatabase.max_overflow,
                     pool_timeout=self.settings.authDatabase.pool_timeout,
-                    pool_pre_ping=True,  # Verify connections before using
-                    pool_recycle=3600,  # Recycle connections after 1 hour
-                    echo=False,  # Set to True for SQL query logging
+                    pool_pre_ping=True, 
+                    pool_recycle=3600,
+                    echo=False,
                 )
                 
-                # Add connection pool event listeners
                 @event.listens_for(self._engine, "connect")
                 def set_sqlite_pragma(dbapi_conn, connection_record):
                     pass
@@ -105,7 +104,7 @@ class DatabaseManager:
         try:
             with self.engine.connect() as conn:
                 result = conn.execute(text("SELECT 1"))
-                result.scalar()  # Consume the result
+                result.scalar()
             logger.debug("Database health check passed")
             return True
         except Exception as e:

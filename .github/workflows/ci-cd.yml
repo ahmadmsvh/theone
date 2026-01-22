@@ -71,8 +71,7 @@ jobs:
       - name: Run auth-service tests
         working-directory: ./auth-service
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/theone_auth_db
-          REDIS_URL: redis://localhost:6379
+          # App Settings
           APP_NAME: TheOne
           ENVIRONMENT: test
           DEBUG: "false"
@@ -84,6 +83,16 @@ jobs:
           JWT_ALGORITHM: HS256
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
           REFRESH_TOKEN_EXPIRE_DAYS: 7
+          # PostgreSQL Auth Database Settings
+          POSTGRES_AUTH_URL: postgresql://postgres:postgres@localhost:5432/theone_auth_db
+          POSTGRES_AUTH_POOL_SIZE: 5
+          POSTGRES_AUTH_MAX_OVERFLOW: 10
+          POSTGRES_AUTH_POOL_TIMEOUT: 30
+          # Redis Settings
+          REDIS_URL: redis://localhost:6379
+          REDIS_DECODE_RESPONSES: "true"
+          REDIS_SOCKET_TIMEOUT: 5
+          REDIS_SOCKET_CONNECT_TIMEOUT: 5
         run: |
           # Create test database
           PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE theone_auth_db;" || true
