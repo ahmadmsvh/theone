@@ -216,7 +216,7 @@ class Settings(BaseSettings):
     
     def __init__(self, **kwargs):
         if "USE_GCP_SECRETS" not in os.environ:
-            os.environ["USE_GCP_SECRETS"] = "true"
+            os.environ["USE_GCP_SECRETS"] = "false"
         if "GCP_PROJECT_ID" not in os.environ:
             os.environ["GCP_PROJECT_ID"] = "theone-35860"
         if "GCP_SECRET_NAMES" not in os.environ:
