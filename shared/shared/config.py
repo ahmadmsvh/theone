@@ -82,13 +82,14 @@ def load_gcp_secrets(project_id: str, secret_names: Optional[list[str]] = None, 
     secrets = {}
     try:
         client = secretmanager.SecretManagerServiceClient()
+
         logger.info("Successfully initialized GCP Secret Manager client")
     except Exception as e:    
         error_msg = str(e)
         logger.error(f"Failed to initialize GCP Secret Manager client: {error_msg}")
         
-        # Check for common authentication issues
         gac_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
         if not gac_path:
             logger.error("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set")
             logger.error("For Docker: Mount service account key and set GOOGLE_APPLICATION_CREDENTIALS")
@@ -98,9 +99,8 @@ def load_gcp_secrets(project_id: str, secret_names: Optional[list[str]] = None, 
         
         raise Exception(f"Failed to initialize GCP Secret Manager client: {error_msg}")
     parent = f"projects/{project_id}"
-
+    
     if secret_prefix:
-
         try:
             for secret in client.list_secrets(request={"parent": parent}):
                 if secret.name.split("/")[-1].startswith(secret_prefix):
@@ -117,8 +117,8 @@ def load_gcp_secrets(project_id: str, secret_names: Optional[list[str]] = None, 
 
         return secrets
 
-    # If secret_names provided, fetch each individual secret
     if secret_names:
+
         for secret_name in secret_names:
             try:
                 name = f"{parent}/secrets/{secret_name}/versions/latest"
@@ -127,12 +127,12 @@ def load_gcp_secrets(project_id: str, secret_names: Optional[list[str]] = None, 
                 logger.debug(f"Loaded secret: {secret_name}")
             except Exception as e:
                 error_msg = str(e)
-                # Log at warning level for authentication/permission errors, debug for missing secrets
                 if "permission" in error_msg.lower() or "not found" in error_msg.lower() or "does not exist" in error_msg.lower():
                     logger.warning(f"Could not load secret '{secret_name}': {error_msg}")
                 else:
                     logger.debug(f"Could not load secret '{secret_name}': {error_msg}")
     
+
     return secrets
 
 
@@ -140,7 +140,6 @@ def load_environment_variables():
 
     environment = os.getenv("ENVIRONMENT", "development").lower()
     gcp_project_id = os.getenv("GCP_PROJECT_ID")
-
     use_gcp = (
         environment == "production" or 
         (gcp_project_id and os.getenv("USE_GCP_SECRETS", "false").lower() == "true")
@@ -161,7 +160,7 @@ def load_environment_variables():
                 secret_names=secret_names,
                 secret_prefix=secret_prefix
             )
-            
+
             if not secrets:
                 logger.warning(f"No secrets found in GCP Secret Manager. Check project_id: {gcp_project_id}, secret_names: {secret_names}, secret_prefix: {secret_prefix}")
             
@@ -215,14 +214,6 @@ class Settings(BaseSettings):
     app: AppSettings = Field(default_factory=AppSettings)
     
     def __init__(self, **kwargs):
-        if "USE_GCP_SECRETS" not in os.environ:
-            os.environ["USE_GCP_SECRETS"] = "false"
-        if "GCP_PROJECT_ID" not in os.environ:
-            os.environ["GCP_PROJECT_ID"] = "theone-35860"
-        if "GCP_SECRET_NAMES" not in os.environ:
-            os.environ["GCP_SECRET_NAMES"] = "theone_secrets"
-        if "GCP_SECRET_PREFIX" not in os.environ:
-            os.environ["GCP_SECRET_PREFIX"] = ""
 
         load_environment_variables()
 
