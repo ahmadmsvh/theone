@@ -114,6 +114,7 @@ services:
       - SERVICE_NAME=auth-service 
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_auth_db
       - REDIS_URL=redis://redis:6379
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/shared/shared/theone-35860-3d9030db5a46.json
     depends_on:
       postgres:
         condition: service_healthy
@@ -164,6 +165,8 @@ services:
       - RABBITMQ_QUEUE_PREFIX=notification-service
       - RABBITMQ_PREFETCH_COUNT=10
       - REDIS_URL=redis://redis:6379
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/shared/shared/theone-35860-3d9030db5a46.json
+
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -191,6 +194,8 @@ services:
       - MONGODB_URL=mongodb://admin:admin@mongodb:27017/theone_db?authSource=admin
       - MONGODB_DATABASE=theone_db
       - REDIS_URL=redis://redis:6379
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/shared/shared/theone-35860-3d9030db5a46.json
+
       # - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       # - RABBITMQ_EXCHANGE=ecommerce.events
       # - RABBITMQ_QUEUE_PREFIX=product-service
@@ -223,6 +228,8 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/theone_order_db
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       - REDIS_URL=redis://redis:6379
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/shared/shared/theone-35860-3d9030db5a46.json
+
     depends_on:
       postgres:
         condition: service_healthy
