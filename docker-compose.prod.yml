@@ -38,6 +38,8 @@ services:
   auth-service:
     image: ghcr.io/${GITHUB_REPOSITORY}/auth-service:latest
     container_name: auth-service
+    ports:
+      - "8001:8001"
     environment:
       - SERVICE_NAME=auth-service
       - ENVIRONMENT=production
