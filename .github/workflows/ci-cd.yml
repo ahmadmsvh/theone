@@ -493,44 +493,35 @@ jobs:
             # Set up PATH for non-interactive shell to find docker
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
             
-            # Use sg to run commands with docker group (handles new group membership)
-            run_docker() {
-              if groups | grep -q docker; then
-                "$@"
-              else
-                sg docker -c "$*"
-              fi
-            }
-            
             cd ~/theone
             
-            # Login to GitHub Container Registry
-            echo "${{ secrets.GITHUB_TOKEN }}" | run_docker docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Login to GitHub Container Registry (use sudo for docker commands)
+            echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Pull latest images
-            run_docker docker compose -f docker-compose.prod.yml pull
+            sudo docker compose -f docker-compose.prod.yml pull
             
             # Stop and remove old containers (keep volumes)
-            run_docker docker compose -f docker-compose.prod.yml down || true
+            sudo docker compose -f docker-compose.prod.yml down || true
             
             # Start infrastructure services first
-            run_docker docker compose -f docker-compose.prod.yml up -d postgres mongodb redis rabbitmq
+            sudo docker compose -f docker-compose.prod.yml up -d postgres mongodb redis rabbitmq
             
             # Wait for databases to be healthy
             echo "Waiting for databases to be ready..."
             sleep 20
             
             # Initialize PostgreSQL databases if they don't exist
-            run_docker docker exec postgres psql -U $POSTGRES_USER -tc "SELECT 1 FROM pg_database WHERE datname = 'theone_auth_db'" | grep -q 1 || \
-              run_docker docker exec postgres psql -U $POSTGRES_USER -c "CREATE DATABASE theone_auth_db;"
+            sudo docker exec postgres psql -U $POSTGRES_USER -tc "SELECT 1 FROM pg_database WHERE datname = 'theone_auth_db'" | grep -q 1 || \
+              sudo docker exec postgres psql -U $POSTGRES_USER -c "CREATE DATABASE theone_auth_db;"
             
-            run_docker docker exec postgres psql -U $POSTGRES_USER -tc "SELECT 1 FROM pg_database WHERE datname = 'theone_order_db'" | grep -q 1 || \
-              run_docker docker exec postgres psql -U $POSTGRES_USER -c "CREATE DATABASE theone_order_db;"
+            sudo docker exec postgres psql -U $POSTGRES_USER -tc "SELECT 1 FROM pg_database WHERE datname = 'theone_order_db'" | grep -q 1 || \
+              sudo docker exec postgres psql -U $POSTGRES_USER -c "CREATE DATABASE theone_order_db;"
             
             echo "Databases initialized successfully"
             
             # Start application services
-            run_docker docker compose -f docker-compose.prod.yml up -d auth-service product-service order-service notification-service notification-worker
+            sudo docker compose -f docker-compose.prod.yml up -d auth-service product-service order-service notification-service notification-worker
             
             # Wait for services to be ready
             echo "Waiting for services to be ready..."
@@ -538,25 +529,25 @@ jobs:
             
             # Run database migrations for auth-service
             echo "Running auth-service migrations..."
-            run_docker docker exec auth-service alembic upgrade head || echo "Migration failed or already applied"
+            sudo docker exec auth-service alembic upgrade head || echo "Migration failed or already applied"
             
             # Run database migrations for order-service
             echo "Running order-service migrations..."
-            run_docker docker exec order-service alembic upgrade head || echo "Migration failed or already applied"
+            sudo docker exec order-service alembic upgrade head || echo "Migration failed or already applied"
             
             # Seed initial data for auth-service (roles)
             echo "Seeding auth-service roles..."
-            run_docker docker exec auth-service python scripts/seed_roles.py || echo "Seeding failed or already done"
+            sudo docker exec auth-service python scripts/seed_roles.py || echo "Seeding failed or already done"
             
             # Start nginx
-            run_docker docker compose -f docker-compose.prod.yml up -d nginx
+            sudo docker compose -f docker-compose.prod.yml up -d nginx
             
             # Clean up old images
-            run_docker docker image prune -af --filter "until=24h" || true
+            sudo docker image prune -af --filter "until=24h" || true
             
             # Show running containers
             echo "Deployment complete! Running containers:"
-            run_docker docker compose -f docker-compose.prod.yml ps
+            sudo docker compose -f docker-compose.prod.yml ps
           EOF
 
       - name: Verify deployment
@@ -570,29 +561,20 @@ jobs:
             # Set up PATH for non-interactive shell to find docker
             export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
             
-            # Use sg to run commands with docker group (handles new group membership)
-            run_docker() {
-              if groups | grep -q docker; then
-                "$@"
-              else
-                sg docker -c "$*"
-              fi
-            }
-            
             cd ~/theone
             
             echo "=== Container Status ==="
-            run_docker docker compose -f docker-compose.prod.yml ps
+            sudo docker compose -f docker-compose.prod.yml ps
             
             echo -e "\n=== Health Check ==="
             curl -f http://localhost/health || exit 1
             echo "✓ Health check passed"
             
             echo -e "\n=== Service Logs (last 20 lines) ==="
-            run_docker docker compose -f docker-compose.prod.yml logs --tail=20 auth-service
-            run_docker docker compose -f docker-compose.prod.yml logs --tail=20 product-service
-            run_docker docker compose -f docker-compose.prod.yml logs --tail=20 order-service
-            run_docker docker compose -f docker-compose.prod.yml logs --tail=20 notification-service
+            sudo docker compose -f docker-compose.prod.yml logs --tail=20 auth-service
+            sudo docker compose -f docker-compose.prod.yml logs --tail=20 product-service
+            sudo docker compose -f docker-compose.prod.yml logs --tail=20 order-service
+            sudo docker compose -f docker-compose.prod.yml logs --tail=20 notification-service
             
             echo -e "\n=== Deployment verified successfully! ==="
           EOF
