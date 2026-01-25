@@ -503,11 +503,16 @@ jobs:
             # Login to GitHub Container Registry (use sudo for docker commands)
             echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Pull latest images
-            sudo docker compose -f docker-compose.prod.yml pull
-            
             # Stop and remove old containers (keep volumes)
             sudo docker compose -f docker-compose.prod.yml down || true
+            
+            # Pull only application images from GHCR (infrastructure images will be pulled when starting)
+            echo "Pulling application images from GitHub Container Registry..."
+            sudo docker pull ghcr.io/${GITHUB_REPOSITORY}/auth-service:latest || echo "Failed to pull auth-service"
+            sudo docker pull ghcr.io/${GITHUB_REPOSITORY}/product-service:latest || echo "Failed to pull product-service"
+            sudo docker pull ghcr.io/${GITHUB_REPOSITORY}/order-service:latest || echo "Failed to pull order-service"
+            sudo docker pull ghcr.io/${GITHUB_REPOSITORY}/notification-service:latest || echo "Failed to pull notification-service"
+            sudo docker pull ghcr.io/${GITHUB_REPOSITORY}/notification-worker:latest || echo "Failed to pull notification-worker"
             
             # Start infrastructure services first
             sudo docker compose -f docker-compose.prod.yml up -d postgres mongodb redis rabbitmq
