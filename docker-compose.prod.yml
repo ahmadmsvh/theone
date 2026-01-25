@@ -1,5 +1,5 @@
 services:
-  # Infrastructure Service
+  # Infrastructure Services
   postgres:
     image: postgres:15-alpine
     container_name: postgres
@@ -46,11 +46,11 @@ services:
     networks:
       - theone-network
     healthcheck:
-      # test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-redis}", "ping"]
-      # interval: 30s
-      # timeout: 10s
-      # retries: 10
-      # start_period: 40s
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-redis}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
     restart: always
 
   rabbitmq:
@@ -64,11 +64,11 @@ services:
     networks:
       - theone-network
     healthcheck:
-      # test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      # interval: 30s
-      # timeout: 10s
-      # retries: 10
-      # start_period: 40s
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
     restart: always
 
   # Application Services

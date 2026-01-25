@@ -378,9 +378,35 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
+          
+          # Validate SSH private key exists
+          if [ -z "${{ secrets.GCP_SSH_PRIVATE_KEY }}" ]; then
+            echo "Error: GCP_SSH_PRIVATE_KEY secret is not set"
+            exit 1
+          fi
+          
+          # Validate VM IP exists
+          if [ -z "${{ secrets.GCP_VM_IP }}" ]; then
+            echo "Error: GCP_VM_IP secret is not set"
+            exit 1
+          fi
+          
           echo "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.GCP_VM_IP }} >> ~/.ssh/known_hosts
+          
+          # Add host key with better error handling
+          echo "Scanning SSH host keys for ${{ secrets.GCP_VM_IP }}..."
+          if ! ssh-keyscan -H -T 10 ${{ secrets.GCP_VM_IP }} >> ~/.ssh/known_hosts 2>&1; then
+            echo "Warning: ssh-keyscan failed, setting up SSH config to skip strict host checking"
+            cat > ~/.ssh/config << 'SSHCONFIG'
+          Host *
+            StrictHostKeyChecking no
+            UserKnownHostsFile=/dev/null
+          SSHCONFIG
+            chmod 600 ~/.ssh/config
+          fi
+          
+          echo "SSH setup complete"
 
       - name: Create .env file
         run: |
