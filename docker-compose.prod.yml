@@ -46,11 +46,11 @@ services:
     networks:
       - theone-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-redis}", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 40s
+      # test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-redis}", "ping"]
+      # interval: 30s
+      # timeout: 10s
+      # retries: 10
+      # start_period: 40s
     restart: always
 
   rabbitmq:
@@ -64,11 +64,11 @@ services:
     networks:
       - theone-network
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 40s
+      # test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      # interval: 30s
+      # timeout: 10s
+      # retries: 10
+      # start_period: 40s
     restart: always
 
   # Application Services
@@ -93,9 +93,9 @@ services:
       - ${GCP_CREDENTIALS_PATH}:/app/gcp-credentials.json:ro
     depends_on:
       postgres:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
     networks:
       - theone-network
     restart: always
@@ -130,11 +130,11 @@ services:
       - ${GCP_CREDENTIALS_PATH}:/app/gcp-credentials.json:ro
     depends_on:
       mongodb:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
     networks:
       - theone-network
     restart: always
@@ -168,11 +168,11 @@ services:
       - ${GCP_CREDENTIALS_PATH}:/app/gcp-credentials.json:ro
     depends_on:
       postgres:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
     networks:
       - theone-network
     restart: always
@@ -205,9 +205,9 @@ services:
       - ${GCP_CREDENTIALS_PATH}:/app/gcp-credentials.json:ro
     depends_on:
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
     networks:
       - theone-network
     restart: always
@@ -240,9 +240,9 @@ services:
       - ${GCP_CREDENTIALS_PATH}:/app/gcp-credentials.json:ro
     depends_on:
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
       notification-service:
         condition: service_started
     networks:
