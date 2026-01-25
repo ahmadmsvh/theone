@@ -46,7 +46,7 @@ services:
       - DEBUG=false
       - POSTGRES_AUTH_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_AUTH_DB:-theone_auth_db}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis}@redis:6379
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-credentials.json
+      - GOOGLE_APPLICATION_CREDENTIALS=../shared/shared/gcp-credentials.json
       - GCP_PROJECT_ID=theone-35860
       - GCP_SECRET_NAMES=theone_secrets
       - GCP_SECRET_PREFIX=
