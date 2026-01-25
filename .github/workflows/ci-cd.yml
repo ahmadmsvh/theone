@@ -233,7 +233,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      # just for testing
       - name: Create GCP credentials file
         run: |
           mkdir -p shared/shared
