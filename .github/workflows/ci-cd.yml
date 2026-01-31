@@ -490,8 +490,8 @@ jobs:
             
             echo "Database initialized successfully"
             
-            # Start application services
-            sudo docker compose -f docker-compose.prod.yml up -d auth-service
+            # Start application services and nginx
+            sudo docker compose -f docker-compose.prod.yml up -d auth-service nginx
             
             # Wait for services to be ready
             echo "Waiting for services to be ready..."
@@ -531,6 +531,7 @@ jobs:
             
             echo -e "\n=== Service Logs (last 20 lines) ==="
             sudo docker compose -f docker-compose.prod.yml logs --tail=20 auth-service
-            
+            sudo docker compose -f docker-compose.prod.yml logs --tail=20 nginx
+
             echo -e "\n=== Deployment verified successfully! ==="
           EOF
