@@ -74,12 +74,22 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/www:/usr/share/nginx/html/.well-known
+      - ./certbot/etc_letsencrypt:/etc/letsencrypt
     depends_on:
       - auth-service
     networks:
       - theone-network
     restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/etc_letsencrypt:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --email ahmadmsvh@gmail.com --agree-tos --no-eff-email -d amsvh.work -d www.amsvh.work
 
 volumes:
   postgres_data:

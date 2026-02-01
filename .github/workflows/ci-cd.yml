@@ -312,7 +312,7 @@ jobs:
 
       - name: Copy files to server
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.GCP_SSH_USER }}@${{ secrets.GCP_VM_IP }} "mkdir -p ~/theone/nginx/conf.d"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.GCP_SSH_USER }}@${{ secrets.GCP_VM_IP }} "mkdir -p ~/theone/nginx/conf.d ~/theone/certbot/www ~/theone/certbot/etc_letsencrypt"
           
           # Copy deployment files
           scp -i ~/.ssh/id_rsa docker-compose.prod.yml ${{ secrets.GCP_SSH_USER }}@${{ secrets.GCP_VM_IP }}:~/theone/
@@ -490,7 +490,21 @@ jobs:
             
             echo "Database initialized successfully"
             
-            # Start application services and nginx
+            # Obtain/renew SSL certificates (certbot from docker-compose.prod.yml)
+            # Uses standalone mode so port 80 is available (nginx not up yet); certs go to shared volumes
+            # < /dev/null prevents certbot/docker from consuming the rest of this script (heredoc stdin)
+            # Timeout 180s so certbot cannot hang and block the rest of deploy
+            echo "Obtaining/renewing SSL certificates..."
+            timeout 180 sudo docker compose -f docker-compose.prod.yml run --rm -p 80:80 certbot certonly \
+              --standalone \
+              -d amsvh.work -d www.amsvh.work \
+              --email ahmadmsvh@gmail.com \
+              --agree-tos --no-eff-email \
+              --keep \
+              < /dev/null || true
+            echo "Certbot step finished, starting application services..."
+            
+            # Start application services and nginx (auth-service required by nginx)
             sudo docker compose -f docker-compose.prod.yml up -d auth-service nginx
             
             # Wait for services to be ready
